@@ -38,5 +38,22 @@ og byg i små trin, han kan klikke rundt i og afprøve.
 
 ## Teknik
 
-- Next.js (App Router) + TypeScript, PostgreSQL via Prisma, Vitest til tests.
-- Dansk som standard, engelsk via oversættelsesfiler.
+- Next.js 16 (App Router) + TypeScript. Læs `node_modules/next/dist/docs/` før du bruger nye API'er
+  (fx hedder middleware nu `src/proxy.ts`).
+- Cache Components er bevidst slået fra: sider med persondata hentes altid frisk (no-store).
+- PostgreSQL via Drizzle ORM (`src/db/schema.ts`). Migrationer genereres med `npm run db:generate`
+  og ligger i `drizzle/`. Prisma blev fravalgt, fordi det kræver downloads uden for npm.
+- Forretningsregler i `src/domain/` (rene funktioner) med tests i Vitest: `npm test`.
+- Dataadgang i `src/lib/cases.ts` håndhæver adgangsreglerne og logger visninger.
+- Sessioner: tilfældigt token i httpOnly-cookie, kun hash i databasen, 8 timers levetid.
+  Kontoen låses 15 min efter 5 forkerte logins.
+- Tekster i `src/i18n/da.ts` og `en.ts` (engelsk skal have samme nøgler – TypeScript tjekker det).
+
+## Lokal udvikling
+
+    cp .env.example .env   # udfyld DATABASE_URL og CPR_ENCRYPTION_KEY
+    npm install
+    npm run db:reset       # migrér og indlæs fiktive demodata
+    npm run dev
+
+Demo-login: mette.lund@nordvigbank.example / Demo1234! (kun fiktive data).

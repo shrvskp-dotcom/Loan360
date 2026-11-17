@@ -3,7 +3,7 @@
 | # | Trin | Status |
 |---|------|--------|
 | 0 | Repository, regler og dokumentation | Færdig |
-| 1 | Projektopsætning, datamodel (bank, afdeling, rådgiver, sag, ansøger, dokumenter, revisionslog) og login for rådgivere | Venter på adgang til pakkeregistre |
+| 1 | Projektopsætning, datamodel (bank, afdeling, rådgiver, sag, ansøger, dokumenter, revisionslog) og login for rådgivere | Færdig |
 | 2 | "Opret sag" i 6 trin med ansøgerkombinationer og dokumentregler | – |
 | 3 | Kundelink og kundeflow med upload og budget | – |
 | 4 | MitID via brokerens testmiljø | – |

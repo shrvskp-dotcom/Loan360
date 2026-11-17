@@ -10,4 +10,13 @@ Tre perspektiver:
 
 Se `docs/` for prototype, dokumentkatalog og roadmap.
 
-Status: under udvikling. Kun fiktive demodata.
+## Kom i gang (udvikling)
+
+    cp .env.example .env
+    npm install
+    npm run db:reset
+    npm run dev
+
+Log ind på http://localhost:3000 med `mette.lund@nordvigbank.example` / `Demo1234!`.
+
+Status: under udvikling. Kun fiktive demodata. Se `docs/roadmap.md`.
