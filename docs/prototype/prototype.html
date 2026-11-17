@@ -1,0 +1,1130 @@
+<title>Lån360 Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: white-label bankportal - demobjælke øverst; rådgiver = sidebar + indhold + højrekolonne; kunde = trinviser + indhold + rådgiverkort */
+:root{
+  --bg:#F2F5FA; --surface:#FFFFFF; --sunk:#EAF0F8; --line:#D9E1EC; --fg:#13233B; --muted:#5A6A80; --ink:#0D2A52;
+  --btn:#0D2A52; --btn-fg:#FFFFFF; --accent:#1D5FD6; --accent-soft:#E3ECFC;
+  --ok:#17804A; --ok-soft:#E1F3E8; --warn:#985800; --warn-soft:#FBEFD9; --bad:#B42318; --bad-soft:#FBE3E0;
+  --violet:#5B3FC4; --violet-soft:#ECE7FB; --grey:#5A6A80; --grey-soft:#E9EDF3;
+  --shadow:0 1px 2px rgba(13,42,82,.06),0 6px 18px rgba(13,42,82,.05);
+  --font:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif; --r:12px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B1220; --surface:#121B2C; --sunk:#18233A; --line:#26344D; --fg:#E4EBF5; --muted:#94A4BD; --ink:#EEF3FA;
+  --btn:#6F9BF2; --btn-fg:#08111F; --accent:#86A9F5; --accent-soft:#1B2A4A;
+  --ok:#5ECB8F; --ok-soft:#143425; --warn:#E9B25C; --warn-soft:#3A2C12; --bad:#F2887C; --bad-soft:#401C19;
+  --violet:#AE9CF5; --violet-soft:#271F46; --grey:#A3B0C4; --grey-soft:#1E293D; --shadow:none; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1220; --surface:#121B2C; --sunk:#18233A; --line:#26344D; --fg:#E4EBF5; --muted:#94A4BD; --ink:#EEF3FA;
+  --btn:#6F9BF2; --btn-fg:#08111F; --accent:#86A9F5; --accent-soft:#1B2A4A;
+  --ok:#5ECB8F; --ok-soft:#143425; --warn:#E9B25C; --warn-soft:#3A2C12; --bad:#F2887C; --bad-soft:#401C19;
+  --violet:#AE9CF5; --violet-soft:#271F46; --grey:#A3B0C4; --grey-soft:#1E293D; --shadow:none; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 var(--font);margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4{margin:0;line-height:1.2;color:var(--ink);text-wrap:balance}
+h1{font-size:clamp(1.6rem,3.2vw,2.3rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.15rem;font-weight:700}
+h3{font-size:1rem;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)} .small{font-size:.85rem} .tiny{font-size:.78rem}
+.num{font-variant-numeric:tabular-nums}
+.eyebrow{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+svg.i{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.between{justify-content:space-between}
+.stack{display:grid;gap:14px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* demobjælke */
+.demobar{background:var(--sunk);border-bottom:1px solid var(--line)}
+.demobar-in{max-width:1400px;margin:0 auto;padding:7px 16px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:.85rem}
+.logo360{font-weight:800;letter-spacing:-.02em;color:var(--ink)} .logo360 b{color:var(--accent)}
+.demotag{font-size:.72rem;font-weight:700;color:var(--warn);background:var(--warn-soft);padding:2px 8px;border-radius:99px}
+.seg{display:inline-flex;gap:2px;background:var(--surface);border:1px solid var(--line);padding:2px;border-radius:9px}
+.seg button{border:0;background:none;padding:4px 11px;border-radius:7px;cursor:pointer;color:var(--muted);font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--btn);color:var(--btn-fg)}
+.demobar .seg{margin-left:auto}
+
+/* knapper og felter */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 16px;cursor:pointer;font-weight:600;color:var(--ink);text-decoration:none}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--btn);border-color:var(--btn);color:var(--btn-fg)}
+.btn.lg{padding:13px 24px;font-size:1.02rem}
+.btn.sm{padding:5px 11px;font-size:.84rem;border-radius:8px}
+.btn.link{border:0;background:none;padding:0;color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.field{display:grid;gap:5px;min-width:0}
+.field>span{font-size:.85rem;font-weight:600;color:var(--fg)}
+.field>span em{color:var(--bad);font-style:normal}
+input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],select,textarea{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 12px}
+input[readonly]{background:var(--sunk);color:var(--muted)}
+textarea{min-height:96px;resize:vertical}
+.err{color:var(--bad);font-size:.85rem}
+.check{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.check input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);flex:none}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt-btn{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 16px;cursor:pointer;font-weight:600;min-width:64px}
+.opt-btn[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.toggle{position:relative;width:46px;height:26px;border-radius:99px;border:0;background:var(--line);cursor:pointer;flex:none}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
+.toggle[aria-checked="true"]{background:var(--accent)}
+.toggle[aria-checked="true"]::after{left:23px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);min-width:0}
+.card.flat{box-shadow:none}
+.note{display:flex;gap:12px;align-items:flex-start;background:var(--accent-soft);border-radius:var(--r);padding:14px 16px}
+.note.ok{background:var(--ok-soft)} .note.warn{background:var(--warn-soft)}
+.note .i{color:var(--accent)} .note.ok .i{color:var(--ok)} .note.warn .i{color:var(--warn)}
+.ic-circle{width:42px;height:42px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.ic-circle.ok{background:var(--ok-soft);color:var(--ok)}
+.checklist{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.checklist li{display:flex;gap:10px;align-items:flex-start}
+.checklist .i{color:var(--ok);width:18px;height:18px;margin-top:2px}
+
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.p-ok{color:var(--ok);background:var(--ok-soft)} .p-info{color:var(--accent);background:var(--accent-soft)}
+.p-warn{color:var(--warn);background:var(--warn-soft)} .p-bad{color:var(--bad);background:var(--bad-soft)}
+.p-violet{color:var(--violet);background:var(--violet-soft)} .p-grey{color:var(--grey);background:var(--grey-soft)}
+.bar{height:7px;border-radius:4px;background:var(--sunk);overflow:hidden;min-width:70px;flex:1}
+.bar>i{display:block;height:100%;background:var(--accent)} .bar.full>i{background:var(--ok)}
+.prog{display:flex;align-items:center;gap:10px;min-width:150px}
+
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th{text-align:left;font-size:.78rem;font-weight:700;color:var(--muted);padding:9px 12px;background:var(--sunk);white-space:nowrap}
+th:first-child{border-radius:8px 0 0 8px} th:last-child{border-radius:0 8px 8px 0}
+td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--sunk)}
+.cell-main{font-weight:700;color:var(--ink)}
+
+/* rådgiver */
+.adv{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:calc(100vh - 42px)}
+.side{background:var(--surface);border-right:1px solid var(--line);padding:16px 10px;display:flex;flex-direction:column;gap:4px}
+.side .bankmark{padding:4px 10px 16px}
+.navbtn{display:flex;align-items:center;gap:12px;border:0;background:none;padding:10px 12px;border-radius:10px;cursor:pointer;color:var(--fg);font-weight:600;text-align:left;width:100%}
+.navbtn:hover{background:var(--sunk)}
+.navbtn[aria-current="page"]{background:var(--accent-soft);color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}
+.badge{margin-left:auto;background:var(--bad);color:#fff;font-size:.72rem;font-weight:700;border-radius:99px;padding:1px 7px}
+.advmain{min-width:0;display:flex;flex-direction:column}
+.advtop{display:flex;gap:14px;align-items:center;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.search{flex:1;min-width:180px;max-width:520px;display:flex;align-items:center;gap:8px;background:var(--sunk);border-radius:10px;padding:0 12px}
+.search input{border:0;background:none;padding:9px 0}
+.search input:focus{outline:none}
+.me{display:flex;align-items:center;gap:10px;margin-left:auto}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;flex:none}
+.avatar.lg{width:56px;height:56px;font-size:1.1rem}
+.bell{position:relative;border:0;background:none;cursor:pointer;color:var(--fg);padding:6px}
+.bell .badge{position:absolute;top:0;right:-4px}
+.content{padding:24px;padding-block:24px 60px;max-width:1400px;width:100%}
+.home-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.kpi{display:flex;gap:12px;align-items:center;cursor:pointer;text-align:left}
+.kpi b{display:block;font-size:1.7rem;font-weight:800;color:var(--ink);line-height:1.1}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;cursor:pointer;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.task{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.task:first-of-type{border-top:0}
+.task.done .t-title{text-decoration:line-through;color:var(--muted)}
+.t-title{font-weight:700;color:var(--ink);cursor:pointer}
+.msg{display:grid;grid-template-columns:auto 1fr auto;gap:10px;padding:10px 0;border-top:1px solid var(--line);cursor:pointer;align-items:center}
+.msg:first-of-type{border-top:0}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bad)}
+
+.steps{display:flex;align-items:flex-start;margin:6px 0 4px;overflow-x:auto;padding-bottom:4px}
+.st{flex:1;display:grid;justify-items:center;gap:6px;position:relative;min-width:76px;text-align:center}
+.st::before{content:"";position:absolute;top:16px;right:50%;width:100%;height:2px;background:var(--line);z-index:0}
+.st:first-child::before{display:none}
+.st.done::before,.st.cur::before{background:var(--ok)}
+.st-dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--sunk);color:var(--muted);position:relative;z-index:1;border:2px solid var(--bg)}
+.st.done .st-dot{background:var(--ok);color:#fff}
+.st.cur .st-dot{background:var(--btn);color:var(--btn-fg)}
+.st-l{font-size:.8rem;color:var(--muted);line-height:1.2}
+.st.cur .st-l{color:var(--ink);font-weight:700}
+.st .i{width:16px;height:16px;stroke-width:2.6}
+
+.case-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:start}
+.apps-mini{display:flex;gap:22px;flex-wrap:wrap}
+.case-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;font-size:.92rem;margin:0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;text-align:right;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.econ{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.econ>.card{align-content:start}
+.econ .big{font-size:1.5rem;font-weight:800;color:var(--ink)}
+.timeline{display:grid;gap:0;list-style:none;margin:0;padding:0}
+.timeline li{display:grid;grid-template-columns:24px 1fr;gap:10px;position:relative;padding-bottom:14px}
+.timeline li::before{content:"";position:absolute;left:11px;top:22px;bottom:0;width:2px;background:var(--line)}
+.timeline li:last-child::before{display:none}
+.tl-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center}
+.tl-dot.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.tl-dot.cur{border-color:var(--accent);background:var(--accent-soft)}
+.tl-dot .i{width:14px;height:14px;stroke-width:2.6}
+.wiz-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+.radio-card{display:grid;grid-template-columns:auto auto 1fr;gap:14px;align-items:center;padding:14px 16px;border:1px solid var(--line);border-radius:var(--r);cursor:pointer;background:var(--surface);text-align:left;width:100%}
+.radio-card[aria-checked="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.radio-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center}
+.radio-card[aria-checked="true"] .radio-dot{border-color:var(--accent)}
+.radio-card[aria-checked="true"] .radio-dot::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.sumcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.preview-mail{border:1px solid var(--line);border-radius:var(--r);padding:16px;background:var(--surface);display:grid;gap:10px;font-size:.9rem}
+.doclist{display:grid;gap:2px}
+.docline{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid var(--line);font-size:.92rem}
+.fieldset{border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:14px}
+.rejbox{display:grid;gap:8px;padding:10px;background:var(--bad-soft);border-radius:9px;margin-top:8px}
+
+/* kunde */
+.cusbar{background:var(--surface);border-bottom:1px solid var(--line)}
+.cusbar-in{max-width:1180px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.bankmark-txt{display:inline-flex;align-items:center;gap:8px;font-weight:800;color:var(--ink);letter-spacing:-.01em;font-size:1.12rem}
+.bankmark-txt i{width:28px;height:28px;border-radius:7px;background:var(--btn);display:grid;place-items:center;color:var(--btn-fg);font-style:normal;font-size:.85rem}
+.cuswrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:22px 40px;display:grid;gap:22px}
+.cus-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:22px;align-items:start}
+.hero{display:grid;gap:12px;padding:8px 0 4px}
+.hero .lead{font-size:1.12rem;color:var(--muted);max-width:60ch}
+.facts{display:flex;flex-wrap:wrap;gap:12px 28px}
+.facts span{display:inline-flex;gap:10px;align-items:center;color:var(--fg);font-weight:500}
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;text-align:center}
+.how .ic-circle{margin:0 auto 6px;width:54px;height:54px}
+.consent{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
+.bankgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.banktile{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:16px 10px;cursor:pointer;font-weight:700;color:var(--ink);text-align:center}
+.banktile:hover,.banktile[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.acct{display:grid;grid-template-columns:auto auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:10px}
+.upl{display:grid;gap:10px;padding:16px;border:1.5px dashed var(--line);border-radius:var(--r)}
+.upl.ok{border-style:solid;border-color:var(--ok);background:var(--ok-soft)}
+.upl input[type=file]{font-size:.85rem;max-width:100%}
+.files{display:flex;flex-wrap:wrap;gap:6px}
+.file{font-size:.8rem;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:2px 8px}
+.revrow{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:14px 4px;border-top:1px solid var(--line)}
+.revrow:first-child{border-top:0}
+.cusfoot{max-width:1180px;margin:0 auto;padding:18px 16px 30px;display:flex;flex-wrap:wrap;gap:12px 22px;font-size:.85rem;color:var(--muted);border-top:1px solid var(--line)}
+.cusfoot .pb{margin-left:auto}
+.navrow{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.mitid-btn{background:#0060E6;color:#fff;border:0;border-radius:10px;padding:13px 22px;font-weight:700;cursor:pointer;font-size:1rem}
+details summary{cursor:pointer;color:var(--accent);font-weight:600}
+.big-check{width:72px;height:72px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center}
+.big-check .i{width:36px;height:36px;stroke-width:2.6}
+
+/* systemejer */
+tr.lvl-bank td{background:var(--sunk);font-weight:700}
+tr.lvl-dept td:first-child{padding-left:26px;font-weight:600}
+tr.lvl-adv td:first-child{padding-left:44px}
+.phases{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--sunk);min-width:110px}
+.phases i{display:block;height:100%}
+.ph-invited{background:var(--line)} .ph-collecting{background:var(--accent)} .ph-awaiting{background:var(--warn)} .ph-ready{background:var(--ok)} .ph-credit{background:var(--violet)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.flag{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.flag:first-child{border-top:0}
+
+.modal-bg{position:fixed;inset:0;background:rgba(8,17,31,.45);display:grid;place-items:center;padding:16px;z-index:30}
+.modal{background:var(--surface);border-radius:var(--r);max-width:560px;width:100%;max-height:85vh;overflow:auto;padding:22px;display:grid;gap:14px}
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-weight:600;z-index:40;max-width:90vw}
+.sim{font-size:.7rem;color:var(--muted);border:1px dashed var(--line);border-radius:5px;padding:0 6px;font-weight:600}
+
+@media (max-width:1500px){.home-grid{grid-template-columns:1fr}.home-aside{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));align-items:start}}
+@media (max-width:1100px){.case-grid,.wiz-grid{grid-template-columns:1fr}}
+@media (max-width:900px){
+  .adv{grid-template-columns:1fr}
+  .side{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px}
+  .side .bankmark,.side .spacer{display:none}
+  .navbtn{width:auto;white-space:nowrap;padding:8px 12px}
+  .navbtn[aria-current="page"]{box-shadow:inset 0 -3px 0 var(--accent)}
+  .cus-grid{grid-template-columns:1fr}
+  .content{padding:16px;padding-block:16px 50px}
+  .advtop{padding:10px 16px}
+  .case-head{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .st{min-width:34px} .st .st-l{display:none} .st.cur .st-l{display:block;position:absolute;top:40px;white-space:nowrap}
+  .steps{padding-bottom:24px}
+  .demobar .seg{margin-left:0}
+  .me .who{display:none}
+  .consent{grid-template-columns:auto 1fr}.consent .toggle-wrap{grid-column:1/3}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div id="demobar"></div>
+<div id="root"></div>
+<div id="modalRoot"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+/* ===================== Hjælpere ===================== */
+const S={lang:"da",view:"adv",page:"home",caseId:null,tab:"overview",listTab:"all",q:"",wiz:null,invited:null,rejecting:null,modal:null,tasksDone:{},
+  cus:{caseId:null,ai:0,step:0,bankPick:null,connecting:false,mitidBusy:false,confirm:false,err:""}};
+const L=(da,en)=>S.lang==="da"?da:en;
+const LL=p=>S.lang==="da"?p[0]:p[1];
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>new Intl.NumberFormat(S.lang==="da"?"da-DK":"en-GB").format(Math.round(n));
+const kr=n=>(n==null||isNaN(n))?"–":(S.lang==="da"?fmt(n)+" kr.":"DKK "+fmt(n));
+const pct=x=>(x==null||!isFinite(x))?"–":(x*100).toFixed(1).replace(".",S.lang==="da"?",":".")+" %";
+const TODAY=new Date();
+const dateOf=d=>{const x=new Date(TODAY);x.setDate(x.getDate()-d);return x};
+const fdate=d=>dateOf(d).toLocaleDateString(S.lang==="da"?"da-DK":"en-GB",{day:"numeric",month:"short",year:"numeric"});
+const rel=d=>d<=0?L("i dag","today"):d===1?L("i går","yesterday"):fdate(d);
+const nowHM=()=>{const n=new Date();return String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0")};
+const P={home:"M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z",user:"M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0",
+users:"M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21a7 7 0 0 1 14 0M16 3.5a4 4 0 0 1 0 7.5M22 21a7 7 0 0 0-4-6.3",plus:"M12 5v14M5 12h14",chat:"M4 5h16v11H9l-5 4z",
+search:"M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-5-5",bell:"M6 9a6 6 0 0 1 12 0c0 6 3 8 3 8H3s3-2 3-8M10 21h4",doc:"M6 2h8l5 5v15H6zM14 2v5h5M9 13h6M9 17h6",
+bank:"M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 21h18",coins:"M12 8c4 0 7-1.3 7-3s-3-3-7-3-7 1.3-7 3 3 3 7 3zM5 5v6c0 1.7 3 3 7 3s7-1.3 7-3V5M5 11v6c0 1.7 3 3 7 3s7-1.3 7-3v-6",
+car:"M5 15l1.6-5.2A2 2 0 0 1 8.5 8.4h7a2 2 0 0 1 1.9 1.4L19 15M3 15h18v4H3zM6.5 19v2M17.5 19v2",check:"M5 12.5l4.5 4.5L19 7.5",lock:"M6 11h12v10H6zM8 11V7a4 4 0 0 1 8 0v4",
+shield:"M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z",shieldck:"M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM8.5 12l2.5 2.5 4.5-4.5",info:"M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 11v6M12 7.5h.01",
+clock:"M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2",send:"M22 2L11 13M22 2l-7 20-4-9-9-4z",ar:"M5 12h14M13 6l6 6-6 6",al:"M19 12H5M11 6l-6 6 6 6",
+upload:"M12 16V4M7 9l5-5 5 5M4 20h16",chart:"M4 20V11M10 20V5M16 20v-7M21 20H3",building:"M5 21V3h14v18M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M3 21h18",
+tool:"M14.5 5.5a4 4 0 0 0 4.9 4.9L21 12l-9 9-3-3 9-9-1.6-1.6zM3 21l3-3",refresh:"M20 11a8 8 0 0 0-14.3-4.9L4 8M4 3v5h5M4 13a8 8 0 0 0 14.3 4.9L20 16M20 21v-5h-5",
+pen:"M4 20h4L20 8l-4-4L4 16z",eye:"M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z",x:"M6 6l12 12M18 6L6 18",
+dots:"M5 12h.01M12 12h.01M19 12h.01",mail:"M3 5h18v14H3zM3 6l9 7 9-7",phone:"M5 3h4l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2",
+bulb:"M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z",grid:"M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z",
+help:"M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01",logout:"M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3",
+wallet:"M3 7h18v13H3zM3 7l3-4h12l3 4M16 13h2"};
+const I=(n,cls="")=>`<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${P[n]}"/></svg>`;
+
+/* ===================== Katalog ===================== */
+const DOC={1:["Personoplysninger","Personal details"],2:["Kontooversigt pr. dags dato","Account overview as of today"],3:["Kontoudtog, seneste 12 mdr.","Bank statements, last 12 months"],
+4:["Pensionsrapport","Pension report"],5:["Seneste 3 lønsedler","Last 3 payslips"],6:["Årsopgørelse (sidste år)","Tax assessment (last year)"],7:["Skatteoplysninger (sidste år)","Tax information (last year)"],
+8:["Restgæld og anden gæld","Outstanding and other debt"],9:["ID-oplysninger","ID verification"],10:["Budget","Budget"],11:["Årsregnskaber (2 år) + saldobalance i år","Annual accounts (2 yrs) + trial balance this year"]};
+const EXTRA={kob:["Købsaftale / købstilbud","Purchase agreement / offer"],gave:["Gavebrev / dokumentation for egenbetaling","Gift letter / proof of own funds"],anden:["Anden dokumentation","Other documentation"],bbr:["Ejendomsdata (BBR)","Property data (BBR)"]};
+const SRC={mitid:["MitID","MitID"],cpr:["CPR via MitID + kunde","CPR via MitID + customer"],bank:["Bank (open banking)","Bank (open banking)"],pension:["PensionsInfo","PensionsInfo"],
+skat:["SKAT (eSkatData)","SKAT (eSkatData)"],skatt:["SKAT + Tinglysning","SKAT + Land Registry"],upload:["Kunde upload","Customer upload"],form:["Kunde (formular)","Customer (form)"],cvr:["Kunde upload + CVR","Customer upload + CVR"],bbr:["BBR (automatisk)","BBR (automatic)"]};
+const ST={auto:["Hentet automatisk","Fetched automatically","ok"],upload:["Modtaget","Received","ok"],filled:["Udfyldt af kunde","Filled in by customer","ok"],consent:["Afventer samtykke","Awaiting consent","info"],
+missing:["Mangler","Missing","warn"],waiting:["Afventer kunde","Awaiting customer","grey"],rejected:["Afvist","Rejected","bad"]};
+const CST={invited:["Invitation sendt","Invitation sent","info"],collecting:["Indsamler data","Collecting data","info"],awaiting:["Afventer kunde","Awaiting customer","warn"],
+ready:["Klar til vurdering","Ready for assessment","ok"],credit:["Under behandling","In credit review","violet"],done:["Afsluttet","Closed","grey"]};
+const PURP={
+ buy:{a:["Køb af ejerbolig","Purchase of owner-occupied home"],ad:["Fx villa, rækkehus, ejerlejlighed eller fritidshus.","E.g. house, terraced house, apartment or holiday home."],c:["Jeg har fundet en bolig","I have found a home"],cd:["Jeg ønsker finansiering til en konkret bolig, som jeg har fundet eller er i gang med at købe.","I want financing for a specific home I have found or am buying."],ic:"home",prop:true},
+ coop:{a:["Køb af andelsbolig","Purchase of cooperative flat"],ad:["Finansiering af andelsbolig (typisk andelsboliglån).","Financing of a cooperative flat (typically a co-op loan)."],c:["Jeg har fundet en andelsbolig","I have found a cooperative flat"],cd:["Jeg skal finansiere køb af en andel.","I need financing for a co-op share."],ic:"building",prop:true},
+ cert:{a:["Købsbevis","Purchase pre-approval"],ad:["Kunden leder stadig og vil kende sin købsramme.","The customer is still looking and wants a price ceiling."],c:["Jeg ønsker et købsbevis","I want a purchase pre-approval"],cd:["Jeg leder stadig og vil vide, hvad jeg kan købe for, så jeg er klar, når den rette bolig dukker op.","I am still looking and want to know my budget, so I am ready when the right home appears."],ic:"doc",prop:false},
+ refi:{a:["Omlægning af boliglån","Remortgaging"],ad:["Ny finansiering af eksisterende bolig.","New financing of an existing home."],c:["Jeg vil omlægge mit boliglån","I want to remortgage"],cd:["Jeg vil undersøge mulighederne for at omlægge mit nuværende lån.","I want to look into refinancing my current loan."],ic:"refresh",prop:true},
+ reno:{a:["Ombygning / renovering","Renovation"],ad:["Lån til forbedringer eller tilbygning.","Loan for improvements or an extension."],c:["Jeg vil renovere","I want to renovate"],cd:["Jeg vil låne til forbedringer af min bolig.","I want to borrow for improvements to my home."],ic:"tool",prop:true},
+ equity:{a:["Friværdi","Home equity release"],ad:["Udnyttelse af friværdi i eksisterende bolig.","Using the equity in an existing home."],c:["Jeg vil bruge min friværdi","I want to use my home equity"],cd:["Jeg vil låne i friværdien i min bolig.","I want to borrow against my home equity."],ic:"coins",prop:true},
+ other:{a:["Andet","Other"],ad:["Andet formål, angives i sagsdetaljer.","Other purpose, described in case details."],c:["Andet","Other"],cd:["Jeg har et andet formål og vil tale med min rådgiver undervejs.","I have another purpose and want to talk to my advisor along the way."],ic:"dots",prop:false}};
+const PURCHASE=p=>p==="buy"||p==="coop"||p==="cert";
+const PROP=[["Villa/parcelhus","Detached house"],["Rækkehus","Terraced house"],["Ejerlejlighed","Apartment"],["Fritidshus","Holiday home"],["Andelsbolig","Cooperative flat"]];
+const CIVIL=[["Gift / samlevende","Married / cohabiting"],["Alene","Single"]];
+const REL=[["Ægtefælle","Spouse"],["Samlever","Partner"],["Forælder","Parent"],["Barn","Child"],["Andet","Other"]];
+const BANKLIST=["Nordvig Bank","Danske Bank","Nordea","Jyske Bank","Nykredit","Sydbank","Spar Nord","Arbejdernes Landsbank","Lån & Spar Bank","Sparekassen Danmark","Ringkjøbing Landbobank","Middelfart Sparekasse"];
+const req=a=>a.type==="emp"?[1,2,3,4,5,6,7,8,9]:[1,2,3,4,6,7,8,9,11];
+
+/* ===================== Fiktive demodata ===================== */
+const BANKS=[{id:"b1",name:"Nordvig Bank"},{id:"b2",name:"Sydkyst Sparekasse"},{id:"b3",name:"Realkredit Fyn"}];
+const DEPTS=[{id:"d1",bank:"b1",name:"Roskilde"},{id:"d2",bank:"b1",name:"Køge"},{id:"d3",bank:"b2",name:"Aarhus C"},{id:"d4",bank:"b2",name:"Odense"},{id:"d5",bank:"b3",name:"København K"}];
+const ADVS=[{id:"a1",dept:"d1",first:"Mette",name:"Mette Lund",login:0,phone:"+45 70 10 20 31",mail:"mette.lund@nordvigbank.example"},
+ {id:"a2",dept:"d1",first:"Jonas",name:"Jonas Krogh",login:1},{id:"a3",dept:"d2",first:"Sara",name:"Sara Holm",login:12},{id:"a4",dept:"d3",first:"Ali",name:"Ali Demir",login:0},
+ {id:"a5",dept:"d4",first:"Line",name:"Line Bech",login:3},{id:"a6",dept:"d5",first:"Peter",name:"Peter Vang",login:1},{id:"a7",dept:"d5",first:"Nadia",name:"Nadia Rask",login:9}];
+const ME="a1";
+const byId=(arr,id)=>arr.find(x=>x.id===id);
+const advInfo=id=>{const a=byId(ADVS,id),d=byId(DEPTS,a.dept),b=byId(BANKS,d.bank);return {a,d,b}};
+
+let rs=7;const rnd=()=>{rs=(rs*16807)%2147483647;return (rs-1)/2147483646};
+function genFin(type,o={}){
+  const gross=o.gross??Math.round((type==="emp"?380000:420000)+rnd()*320000);
+  return {gross,net:o.net??Math.round(gross*0.62/12/100)*100,savings:o.savings??Math.round(20000+rnd()*400000),pension:o.pension??Math.round(150000+rnd()*900000),
+    debts:o.debts??(rnd()>.5?[{t:["Studielån","Student loan"],amt:Math.round(30000+rnd()*90000)}]:[]),employer:o.employer??"",car:o.car??null};
+}
+function mkA(o){
+  const a=Object.assign({first:"",last:"",cpr:"010190-XXXX",email:"",phone:"",addr:"",zip:"",city:"",type:"emp",company:"",cvr:"",relation:0,civil:null,kids:null,
+    mitid:false,mitidAt:null,consents:{skat:null,bank:null,pension:null,vehicle:null,tinglysning:null},bankLinked:false,banks:[],accounts:[],fetchAt:null,
+    uploads:{},rejected:{},infoDone:false,infoAt:null,carAns:null,debtNote:"",submitted:false,submittedAt:null},o);
+  a.fin=o.fin||genFin(a.type);
+  if(!a.employer)a.employer=a.type==="emp"?(a.fin.employer||"Arbejdsgiver A/S"):a.company;
+  return a;
+}
+const FILES={5:["lonseddel_2026-07.pdf","lonseddel_2026-08.pdf","lonseddel_2026-09.pdf"],"11a":["aarsregnskab_2024.pdf","aarsregnskab_2025.pdf"],"11b":["saldobalance_2026.pdf"],kob:["koebsaftale_underskrevet.pdf"],gave:["gavebrev.pdf"],anden:["dokumentation.pdf"]};
+const defaultAccounts=()=>[{n:["Lønkonto","Salary account"],no:"•••• 3456",bal:58432,on:true},{n:["Opsparing","Savings"],no:"•••• 7654",bal:312850,on:true},
+ {n:["Budgetkonto","Budget account"],no:"•••• 3344",bal:12430,on:true},{n:["Aktier og investering","Shares and investments"],no:"•••• 5566",bal:25340,on:false},{n:["Boligkonto","Housing account"],no:"•••• 9900",bal:1250,on:false}];
+function preset(a,p,d){
+  if(p==="none")return a;
+  Object.assign(a,{mitid:true,mitidAt:d,consents:{skat:true,bank:true,pension:true,vehicle:!!a.fin.car,tinglysning:true},bankLinked:true,banks:["Nordvig Bank"],accounts:defaultAccounts(),fetchAt:d});
+  if(p==="started")return a;
+  Object.assign(a,{infoDone:true,infoAt:d,civil:a.civil??0,kids:a.kids??0});
+  if(p==="info")return a;
+  if(a.type==="emp")a.uploads[5]=FILES[5].map(n=>({n,d}));else{a.uploads["11a"]=FILES["11a"].map(n=>({n,d}));a.uploads["11b"]=FILES["11b"].map(n=>({n,d}))}
+  a.submitted=true;a.submittedAt=d;return a;
+}
+function mkBudget(c){
+  const inc=c.apps.map(a=>a.fin.net);const n=c.apps.length;
+  return {inc,housing:n>1?11200:7400,transport:c.apps.some(a=>a.fin.car)?3400:900,insurance:1300,kids:0,subs:650,loans:Math.round(c.apps.reduce((s,a)=>s+a.fin.debts.reduce((x,y)=>x+y.amt,0),0)/120),food:n>1?6500:3800,other:n>1?3500:2200};
+}
+let seq=7840;
+function mkCase(o){
+  seq+=3;
+  const c=Object.assign({id:"L360-2026-"+seq,adv:ME,apps:[],purpose:"buy",price:0,downpay:0,loan:0,propType:0,propAddr:"",propZip:"",propCity:"",takeover:"",notes:"",broker:{firm:"",person:"",phone:""},
+    extras:{kob:false,gave:false,anden:false},uploads:{},rejected:{},budget:null,stage:"open",created:0,history:[],summary:"",invitedAt:o.created??0,reminders:true,msg:""},o);
+  if(!c.loan&&c.price)c.loan=c.price-c.downpay;
+  return c;
+}
+const H=(d,t,da,en)=>({d,t,da,en});
+
+const CASES=[];
+(function seed(){
+ // Mette Lund (a1)
+ let c=mkCase({created:6,purpose:"buy",price:3495000,downpay:300000,propType:1,propAddr:"Solvænget 12",propZip:"2000",propCity:"Frederiksberg",takeover:"2026-12-01",notes:"Standardkøb. Ingen særlige forhold.",
+  broker:{firm:"Byens Bolig",person:"Peter Hansen",phone:"+45 33 12 34 56"},extras:{kob:true,gave:false,anden:false},
+  apps:[preset(mkA({first:"Ali",last:"Khan",cpr:"030185-XXXX",email:"ali.khan@example.dk",phone:"+45 22 11 33 44",addr:"Frederiksberg Allé 125",zip:"2000",city:"Frederiksberg",type:"emp",
+    fin:genFin("emp",{gross:612000,net:36800,savings:523481,pension:1120000,employer:"Nordlys Logistik A/S",debts:[{t:["Billån","Car loan"],amt:89000},{t:["Forbrugslån","Consumer loan"],amt:48200}],car:["Toyota Corolla 2019 (ejet)","Toyota Corolla 2019 (owned)"]}),kids:2}),"full",0),
+   mkA({first:"Aisha",last:"Khan",cpr:"040288-XXXX",email:"aisha.khan@example.dk",phone:"+45 27 66 44 11",addr:"Frederiksberg Allé 125",zip:"2000",city:"Frederiksberg",type:"emp",relation:0,
+    fin:genFin("emp",{gross:384000,net:24900,savings:41200,pension:310000,employer:"Region Hovedstaden",debts:[{t:["Studielån","Student loan"],amt:64000}]})})]});
+ preset(c.apps[1],"started",1);c.uploads.kob=FILES.kob.map(n=>({n,d:0}));c.budget=mkBudget(c);
+ c.history=[H(0,"10:24","Ali Khan sendte sin del af sagen","Ali Khan submitted his part of the case"),H(0,"10:20","Ali Khan uploadede lønsedler","Ali Khan uploaded payslips"),
+  H(1,"09:17","Aisha Khan gav samtykke og forbandt sin bank","Aisha Khan gave consent and connected her bank"),H(5,"16:03","Kunderne åbnede linket","The customers opened the link"),H(6,"15:58","Invitation sendt til Ali og Aisha Khan","Invitation sent to Ali and Aisha Khan")];
+ c.messages=[{d:0,t:"10:24",from:"Ali Khan",da:"Har uploadet lønsedler og købsaftalen.",en:"I have uploaded payslips and the purchase agreement.",unread:true}];
+ CASES.push(c);
+
+ c=mkCase({created:9,purpose:"coop",price:1150000,downpay:120000,propType:4,propAddr:"Roskildevej 32, 2. th.",propZip:"4000",propCity:"Roskilde",extras:{kob:true,gave:false,anden:false},
+  apps:[preset(mkA({first:"Sara",last:"Nielsen",cpr:"120791-XXXX",email:"sara.nielsen@example.dk",phone:"+45 31 45 67 89",addr:"Hestetorvet 4",zip:"4000",city:"Roskilde",type:"self",company:"Nielsen Design ApS",cvr:"41234567",
+    fin:genFin("self",{gross:468000,net:27600,savings:188000,pension:240000,debts:[]})}),"full",2)]});
+ c.apps[0].rejected[11]=L("Saldobalancen er fra 2025. Upload venligst saldobalance for 2026.","The trial balance is from 2025. Please upload the 2026 trial balance.");
+ c.apps[0].rejectedDa="Saldobalancen er fra 2025. Upload venligst saldobalance for 2026.";
+ delete c.apps[0].uploads["11b"];
+ c.uploads.kob=FILES.kob.map(n=>({n,d:2}));c.budget=mkBudget(c);
+ c.history=[H(1,"14:12","Saldobalance afvist: forkert år","Trial balance rejected: wrong year"),H(2,"11:40","Sara Nielsen sendte sin sag","Sara Nielsen submitted her case"),H(9,"10:05","Invitation sendt til Sara Nielsen","Invitation sent to Sara Nielsen")];
+ c.messages=[{d:1,t:"14:30",from:"Sara Nielsen",da:"Hej, jeg har et spørgsmål til min årsopgørelse – kan vi tage det på telefon?",en:"Hi, I have a question about my tax assessment – can we talk by phone?",unread:true}];
+ CASES.push(c);
+
+ c=mkCase({created:12,purpose:"buy",price:2850000,downpay:285000,propType:2,propAddr:"Østerbrogade 18, 3. tv.",propZip:"2100",propCity:"København Ø",extras:{kob:true,gave:true,anden:false},
+  apps:[preset(mkA({first:"Jonas",last:"Mikkelsen",cpr:"220594-XXXX",email:"jonas.m@example.dk",phone:"+45 40 12 98 76",addr:"Jagtvej 88",zip:"2200",city:"København N",type:"emp",
+    fin:genFin("emp",{gross:548000,net:33100,savings:342000,pension:410000,employer:"Copenhagen Software ApS",debts:[]})}),"full",1)]});
+ c.uploads.kob=FILES.kob.map(n=>({n,d:1}));c.uploads.gave=FILES.gave.map(n=>({n,d:1}));c.budget=mkBudget(c);
+ c.history=[H(1,"09:41","Alle krævede oplysninger er modtaget","All required information received"),H(1,"09:38","Jonas Mikkelsen sendte sin sag","Jonas Mikkelsen submitted his case"),H(12,"13:20","Invitation sendt","Invitation sent")];
+ CASES.push(c);
+
+ c=mkCase({created:16,purpose:"buy",price:5250000,downpay:600000,propType:0,propAddr:"Kastrupvej 101",propZip:"2300",propCity:"København S",stage:"credit",extras:{kob:true,gave:false,anden:false},
+  apps:[preset(mkA({first:"Fatima",last:"Rahman",cpr:"170382-XXXX",email:"fatima.r@example.dk",phone:"+45 26 33 10 20",addr:"Englandsvej 40",zip:"2300",city:"København S",type:"self",company:"Rahman Tandklinik ApS",cvr:"38765432",
+    fin:genFin("self",{gross:845000,net:47200,savings:610000,pension:1460000,debts:[{t:["Erhvervslån (personlig kaution)","Business loan (personal guarantee)"],amt:250000}]})}),"full",4),
+   preset(mkA({first:"Mads",last:"Rahman",cpr:"090880-XXXX",email:"mads.r@example.dk",phone:"+45 26 33 10 21",addr:"Englandsvej 40",zip:"2300",city:"København S",type:"emp",relation:0,
+    fin:genFin("emp",{gross:498000,net:30400,savings:95000,pension:520000,employer:"Københavns Kommune",debts:[]})}),"full",4)]});
+ c.uploads.kob=FILES.kob.map(n=>({n,d:4}));c.budget=mkBudget(c);c.summary="Stabil indtjening i klinikken de seneste tre år. Solid egenkapital og lav gæld.";
+ c.history=[H(3,"12:00","Sendt til kreditvurdering","Sent to credit assessment"),H(4,"15:10","Alle krævede oplysninger er modtaget","All required information received"),H(16,"09:00","Invitation sendt","Invitation sent")];
+ c.messages=[{d:5,t:"16:45",from:"Fatima Rahman",da:"Tak for gennemgangen i dag.",en:"Thanks for the review today.",unread:false}];
+ CASES.push(c);
+
+ c=mkCase({created:4,purpose:"cert",price:2400000,downpay:250000,propType:2,extras:{kob:false,gave:false,anden:false},
+  apps:[mkA({first:"Thomas",last:"Larsen",cpr:"250697-XXXX",email:"thomas.larsen@example.dk",phone:"+45 61 22 33 44",addr:"Vanløse Allé 7",zip:"2720",city:"Vanløse",type:"emp",
+    fin:genFin("emp",{gross:472000,net:28900,savings:265000,pension:180000,employer:"Vestegnens Byg A/S",debts:[{t:["Studielån","Student loan"],amt:52000}],car:["Ford Focus 2016 (ejet)","Ford Focus 2016 (owned)"]})})]});
+ c.history=[H(4,"11:15","Invitation sendt til Thomas Larsen","Invitation sent to Thomas Larsen")];
+ CASES.push(c);
+
+ c=mkCase({created:10,purpose:"refi",price:7800000,downpay:0,loan:4200000,propType:0,propAddr:"Hellerupvej 45",propZip:"2900",propCity:"Hellerup",extras:{kob:false,gave:false,anden:false},
+  apps:[preset(mkA({first:"Emma",last:"Jensen",cpr:"300379-XXXX",email:"emma.j@example.dk",phone:"+45 28 90 11 22",addr:"Hellerupvej 45",zip:"2900",city:"Hellerup",type:"self",company:"Jensen Advokatfirma",cvr:"29887766",
+    fin:genFin("self",{gross:910000,net:50100,savings:720000,pension:2100000,debts:[{t:["Realkreditlån","Mortgage loan"],amt:3650000}]})}),"full",3),
+   preset(mkA({first:"Oscar",last:"Jensen",cpr:"141177-XXXX",email:"oscar.j@example.dk",phone:"+45 28 90 11 23",addr:"Hellerupvej 45",zip:"2900",city:"Hellerup",type:"self",company:"OJ Arkitekter ApS",cvr:"35544332",relation:0,
+    fin:genFin("self",{gross:640000,net:37200,savings:150000,pension:980000,debts:[]})}),"started",2)]});
+ c.history=[H(2,"18:30","Oscar Jensen gav samtykke","Oscar Jensen gave consent"),H(3,"20:05","Emma Jensen sendte sin del af sagen","Emma Jensen submitted her part"),H(10,"10:00","Invitation sendt","Invitation sent")];
+ CASES.push(c);
+
+ c=mkCase({created:14,purpose:"buy",price:1995000,downpay:400000,propType:3,propAddr:"Klitvej 7",propZip:"3210",propCity:"Vejby",extras:{kob:true,gave:false,anden:false},
+  apps:[preset(mkA({first:"Kasper",last:"Holm",cpr:"080688-XXXX",email:"kasper.holm@example.dk",phone:"+45 50 60 70 80",addr:"Rungstedvej 12",zip:"2960",city:"Rungsted Kyst",type:"emp",
+    fin:genFin("emp",{gross:720000,net:42100,savings:480000,pension:890000,employer:"Øresund Pharma A/S",debts:[]})}),"full",3)]});
+ c.uploads.kob=FILES.kob.map(n=>({n,d:3}));c.budget=mkBudget(c);
+ c.history=[H(3,"08:55","Alle krævede oplysninger er modtaget","All required information received"),H(14,"14:00","Invitation sendt","Invitation sent")];
+ CASES.push(c);
+
+ [["Line","Berg",25],["Nikolaj","Friis",19]].forEach(([f,l,cr])=>{const x=mkCase({created:cr,stage:"done",purpose:"buy",price:2600000,downpay:300000,propType:2,propAddr:"Algade 3",propZip:"4000",propCity:"Roskilde",
+   apps:[preset(mkA({first:f,last:l,type:"emp"}),"full",cr-3)]});x.budget=mkBudget(x);x.history=[H(cr-6,"12:00","Sag afsluttet","Case closed"),H(cr,"09:00","Invitation sendt","Invitation sent")];CASES.push(x)});
+
+ // øvrige rådgivere (til systemejer-visningen)
+ const FN=["Anna","Mikkel","Ida","Frederik","Clara","Noah","Ella","Victor","Laura","Oliver","Maja","William","Sofie","Lucas","Freja","Elias","Alma","Karl","Agnes","Valdemar"];
+ const LN=["Sørensen","Poulsen","Kristensen","Lund","Dahl","Bruun","Vestergaard","Mortensen","Kjær","Thomsen"];
+ let k=0;
+ ADVS.filter(a=>a.id!==ME).forEach((adv,ai)=>{const n=2+(ai%3);for(let j=0;j<n;j++){k++;
+   const two=rnd()>.5;const t1=rnd()>.7?"self":"emp",t2=rnd()>.75?"self":"emp";const pr=["none","started","full","full","info"][Math.floor(rnd()*5)];
+   const cr=1+Math.floor(rnd()*20);const apps=[preset(mkA({first:FN[k%FN.length],last:LN[k%LN.length],type:t1}),pr,Math.max(0,cr-2))];
+   if(two)apps.push(preset(mkA({first:FN[(k+7)%FN.length],last:LN[k%LN.length],type:t2}),pr==="full"?"full":"none",Math.max(0,cr-2)));
+   const x=mkCase({adv:adv.id,created:cr,apps,purpose:["buy","buy","coop","cert","refi"][k%5],price:2000000+Math.round(rnd()*30)*100000,downpay:250000,propType:k%5,propAddr:"Demovej "+k,propZip:"5000",propCity:"Odense",
+     stage:(pr==="full"&&rnd()>.6)?"credit":"open"});
+   if(pr==="full")x.budget=mkBudget(x);
+   x.history=[H(Math.max(0,cr-1-Math.floor(rnd()*cr)),"10:00","Aktivitet","Activity")];
+   if(k===3)x.integErr="PensionsInfo";if(k===8)x.integErr="SKAT (eSkatData)";
+   CASES.push(x)}});
+})();
+S.cus.caseId=CASES[4].id;
+
+/* ===================== Afledt logik ===================== */
+const fullName=a=>(a.first+" "+a.last).trim();
+const names=c=>c.apps.map(fullName).join(" & ");
+const combo=c=>c.apps.map(a=>a.type==="emp"?L("Lønmodtager","Employee"):L("Selvstændig","Self-employed")).join(" + ");
+const typeL=a=>a.type==="emp"?L("Lønmodtager","Employee"):L("Selvstændig","Self-employed");
+const RECEIVED=s=>s==="auto"||s==="upload"||s==="filled";
+const AUTO_BY={2:"bank",3:"bank",4:"pension",6:"skat",7:"skat",8:"skat"};
+function docState(c,a,n){
+  if(a.rejected[n])return {s:"rejected",src:LL(SRC.upload),reason:a.rejected[n]};
+  if(n===9)return a.mitid?{s:"auto",src:LL(SRC.mitid),d:a.mitidAt}:{s:"waiting",src:LL(SRC.mitid)};
+  if(n===1)return a.infoDone?{s:"filled",src:LL(SRC.cpr),d:a.infoAt}:{s:a.mitid?"missing":"waiting",src:LL(SRC.cpr)};
+  if(n===5){const u=a.uploads[5];return u&&u.length?{s:"upload",src:LL(SRC.upload),d:u[0].d,files:u}:{s:a.mitid?"missing":"waiting",src:LL(SRC.upload)}}
+  if(n===11){const x=a.uploads["11a"],y=a.uploads["11b"];return x&&x.length&&y&&y.length?{s:"upload",src:LL(SRC.cvr),d:y[0].d,files:[...x,...y]}:{s:a.mitid?"missing":"waiting",src:LL(SRC.cvr)}}
+  const by=AUTO_BY[n];const cons=a.consents[by];const src=n===8&&a.consents.tinglysning?LL(SRC.skatt):LL(SRC[by]);
+  if(cons&&(by!=="bank"||a.bankLinked))return {s:"auto",src,d:a.fetchAt};
+  const u=a.uploads[n];if(u&&u.length)return {s:"upload",src:LL(SRC.upload),d:u[0].d,files:u};
+  if(!a.mitid)return {s:"waiting",src};
+  if(cons===false)return {s:"missing",src:LL(SRC.upload)};
+  return {s:"consent",src};
+}
+function sagItems(c){ // fælles punkter
+  const main=c.apps[0];const out=[];
+  out.push({k:10,name:L("Budget","Budget"),st:c.rejected[10]?{s:"rejected",src:LL(SRC.form),reason:c.rejected[10]}:c.budget?{s:"filled",src:LL(SRC.form),d:main.submittedAt??0}:{s:main.mitid?"missing":"waiting",src:LL(SRC.form)},req:true});
+  if(c.propAddr&&PURP[c.purpose].prop)out.push({k:"bbr",name:LL(EXTRA.bbr),st:{s:"auto",src:LL(SRC.bbr),d:c.created},req:true});
+  ["kob","gave","anden"].forEach(k=>{if(c.extras[k]){const u=c.uploads[k];out.push({k,name:LL(EXTRA[k]),st:c.rejected[k]?{s:"rejected",src:LL(SRC.upload),reason:c.rejected[k]}:u&&u.length?{s:"upload",src:LL(SRC.upload),d:u[0].d,files:u}:{s:main.mitid?"missing":"waiting",src:LL(SRC.upload)},req:true})}});
+  return out;
+}
+function allItems(c){const o=[];c.apps.forEach((a,i)=>req(a).forEach(n=>o.push({i,n,st:docState(c,a,n)})));sagItems(c).forEach(x=>o.push({i:null,n:x.k,st:x.st,name:x.name}));return o}
+function progress(c){const it=allItems(c);const r=it.filter(x=>RECEIVED(x.st.s)).length;return {r,total:it.length,missing:it.length-r,pct:Math.round(r/it.length*100)}}
+function statusOf(c){
+  if(c.stage==="done")return "done";if(c.stage==="credit")return "credit";
+  const p=progress(c);if(p.missing===0)return "ready";
+  if(!c.apps.some(a=>a.mitid))return "invited";
+  if(c.apps.every(a=>a.submitted)||allItems(c).some(x=>x.st.s==="rejected"))return "awaiting";
+  return "collecting";
+}
+const lastAct=c=>c.history.length?Math.min(...c.history.map(h=>h.d)):c.created;
+function pill(key,map=ST){const m=map[key];return `<span class="pill p-${m[2]}">${esc(S.lang==="da"?m[0]:m[1])}</span>`}
+const itemName=x=>x.name||LL(DOC[x.n]);
+function hist(c,da,en){c.history.unshift(H(0,nowHM(),da,en))}
+let toastT;function toast(m){const t=document.getElementById("toast");t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2600)}
+const cpr=a=>a.cpr.slice(0,6)+"-XXXX";
+const initials=n=>n.split(" ").map(x=>x[0]).join("").slice(0,2).toUpperCase();
+function econ(c){
+  const skatOK=c.apps.map(a=>a.consents.skat&&a.mitid);const bankOK=c.apps.map(a=>a.consents.bank&&a.bankLinked);const penOK=c.apps.map(a=>a.consents.pension&&a.mitid);
+  const sum=(arr,f)=>arr.reduce((s,a,i)=>s+f(a,i),0);
+  const gross=skatOK.every(Boolean)?sum(c.apps,a=>a.fin.gross):null;
+  const net=c.apps.map((a,i)=>skatOK[i]?a.fin.net:null);
+  const savings=bankOK.every(Boolean)?sum(c.apps,a=>a.fin.savings):null;
+  const pension=penOK.every(Boolean)?sum(c.apps,a=>a.fin.pension):null;
+  const debts=[];c.apps.forEach((a,i)=>{if(skatOK[i])a.fin.debts.forEach(d=>debts.push({who:a.first,t:LL(d.t),amt:d.amt}))});
+  const debtSum=skatOK.every(Boolean)?debts.reduce((s,d)=>s+d.amt,0):null;
+  let inc=null,exp=null,disp=null;
+  if(c.budget){const b=c.budget;inc=b.inc.reduce((s,x)=>s+(+x||0),0);exp=["housing","transport","insurance","kids","subs","loans","food","other"].reduce((s,k)=>s+(+b[k]||0),0);disp=inc-exp}
+  const loan=c.loan||Math.max(0,c.price-c.downpay);
+  return {gross,net,savings,pension,debts,debtSum,inc,exp,disp,loan,
+    downPct:PURCHASE(c.purpose)&&c.price?c.downpay/c.price:null,ltv:c.price?loan/c.price:null,
+    debtFactor:gross&&debtSum!=null?((c.purpose==="refi"?debtSum-(debts.find(d=>/Realkredit|Mortgage/.test(d.t))?.amt||0):debtSum)+loan)/gross:null};
+}
+
+/* ===================== Demobjælke ===================== */
+function demobar(){
+  return `<div class="demobar-in"><span class="logo360">Lån<b>360</b></span><span class="demotag">${L("Prototype · fiktive data","Prototype · fictitious data")}</span>
+  <div class="seg" role="group" aria-label="${L("Perspektiv","Perspective")}">${[["adv",L("Rådgiver","Advisor")],["cus",L("Kunde","Customer")],["own",L("Systemejer","System owner")]].map(([k,l])=>`<button type="button" data-a="view" data-v="${k}" aria-pressed="${S.view===k}">${l}</button>`).join("")}</div>
+  <button class="btn sm" type="button" data-a="lang" aria-label="${L("Switch to English","Skift til dansk")}">${S.lang==="da"?"EN":"DA"}</button></div>`;
+}
+
+/* ===================== Rådgiver ===================== */
+function bankMark(name){return `<span class="bankmark-txt"><i>${esc(name.split(" ").map(w=>w[0]).join("").slice(0,2))}</i>${esc(name)}</span>`}
+function advShell(inner){
+  const {a,d,b}=advInfo(ME);const unread=CASES.filter(c=>c.adv===ME).reduce((s,c)=>s+(c.messages||[]).filter(m=>m.unread).length,0);
+  const nav=[["home","home",L("Mit overblik","My overview")],["cases","doc",L("Boligsager","Home cases")],["new","plus",L("Opret ny sag","New case")],["messages","chat",L("Beskeder","Messages")]];
+  const cur=S.page==="case"?"cases":S.page==="invited"?"new":S.page;
+  return `<div class="adv"><nav class="side" aria-label="${L("Hovedmenu","Main menu")}"><div class="bankmark">${bankMark(b.name)}</div>
+   ${nav.map(([k,ic,l])=>`<button class="navbtn" type="button" data-a="nav" data-p="${k}" ${cur===k?'aria-current="page"':""}>${I(ic)}${l}${k==="messages"&&unread?`<span class="badge">${unread}</span>`:""}</button>`).join("")}
+   <div class="spacer" style="flex:1"></div><div class="tiny muted spacer" style="padding:8px 12px">Powered by <b>Lån360</b></div></nav>
+   <div class="advmain"><header class="advtop"><label class="search">${I("search")}<input type="text" id="q" placeholder="${L("Søg efter kunde eller sagsnummer…","Search customer or case number…")}" value="${esc(S.q)}" aria-label="${L("Søg","Search")}"></label>
+    <div class="me"><button class="bell" type="button" data-a="nav" data-p="messages" aria-label="${L("Beskeder","Messages")}">${I("bell")}${unread?`<span class="badge">${unread}</span>`:""}</button>
+    <span class="avatar">${initials(a.name)}</span><span class="who"><b style="display:block;color:var(--ink)">${esc(a.name)}</b><span class="small muted">${L("Privatrådgiver","Personal advisor")} · ${esc(d.name)}</span></span></div></header>
+   <main class="content">${inner}</main></div></div>`;
+}
+function caseTable(list){
+  if(!list.length)return `<p class="muted" style="padding:16px 4px">${L("Ingen sager matcher.","No matching cases.")}</p>`;
+  return `<div class="tbl-wrap"><table><thead><tr><th>${L("Kunde","Customer")}</th><th>${L("Ansøgere","Applicants")}</th><th>${L("Formål","Purpose")}</th><th>${L("Status","Status")}</th><th>${L("Kundens fremdrift","Customer progress")}</th><th>${L("Seneste aktivitet","Latest activity")}</th></tr></thead><tbody>
+  ${list.map(c=>{const p=progress(c);const h=c.history[0];return `<tr class="click" data-a="open" data-id="${c.id}" tabindex="0">
+   <td><div class="cell-main">${esc(names(c))}</div><div class="small muted">${esc(c.propAddr||c.apps[0].addr)}</div></td><td class="small">${esc(combo(c))}</td><td class="small">${esc(LL(PURP[c.purpose].a))}</td>
+   <td>${pill(statusOf(c),CST)}</td><td><div class="prog"><div class="bar ${p.missing?"":"full"}"><i style="width:${p.pct}%"></i></div><span class="num small">${p.r}/${p.total}</span></div></td>
+   <td class="small"><div>${h?esc(S.lang==="da"?h.da:h.en):""}</div><div class="muted">${h?rel(h.d)+(h.d<=1?" kl. "+h.t:""):""}</div></td></tr>`}).join("")}</tbody></table></div>`;
+}
+function myCases(){let l=CASES.filter(c=>c.adv===ME);if(S.q){const q=S.q.toLowerCase();l=l.filter(c=>names(c).toLowerCase().includes(q)||c.id.toLowerCase().includes(q))}return l}
+function filtered(){
+  const l=myCases();const t=S.listTab;
+  if(t==="all")return l.filter(c=>statusOf(c)!=="done");
+  if(t==="collecting")return l.filter(c=>["invited","collecting"].includes(statusOf(c)));
+  return l.filter(c=>statusOf(c)===t);
+}
+function tasks(){
+  const out=[];
+  myCases().forEach(c=>{const s=statusOf(c);
+    if(s==="ready")out.push({id:c.id+"r",c,t:L("Gennemgå sag – ","Review case – ")+names(c),s:L("Alle krævede oplysninger er modtaget","All required information received")});
+    if(s==="awaiting"){const m=allItems(c).find(x=>!RECEIVED(x.st.s));out.push({id:c.id+"a",c,t:L("Følg op – ","Follow up – ")+names(c),s:L("Mangler: ","Missing: ")+(m?itemName(m):"")})}
+    if(s==="invited"&&c.created>=3)out.push({id:c.id+"i",c,t:L("Send påmindelse – ","Send reminder – ")+names(c),s:L("Har ikke åbnet linket i ","Has not opened the link in ")+c.created+L(" dage"," days")});
+  });return out.slice(0,5);
+}
+function pageHome(){
+  const {a}=advInfo(ME);const l=myCases();const cnt=s=>l.filter(c=>statusOf(c)===s).length;
+  const h=new Date().getHours();const greet=h<10?L("Godmorgen","Good morning"):h<17?L("Goddag","Good afternoon"):L("Godaften","Good evening");
+  const k=[["home",l.filter(c=>statusOf(c)!=="done").length,L("Aktive boligsager","Active home cases"),"all"],["user",cnt("awaiting")+cnt("invited"),L("Sager afventer kunde","Cases awaiting customer"),"awaiting"],
+    ["doc",cnt("ready"),L("Klar til vurdering","Ready for assessment"),"ready"],["check",cnt("done"),L("Afsluttede sager, seneste 30 dage","Closed cases, last 30 days"),"done"]];
+  const msgs=[];l.forEach(c=>(c.messages||[]).forEach(m=>msgs.push({...m,c})));msgs.sort((x,y)=>x.d-y.d);
+  const tk=tasks();
+  return `<div class="row between" style="margin-bottom:18px"><div><h1>${greet}, ${esc(a.first)}</h1><p class="muted">${L("Her er dit overblik over dine boligsager.","Here is your overview of your home cases.")}</p></div>
+   <button class="btn pri lg" type="button" data-a="nav" data-p="new">${I("plus")}${L("Opret ny boligsag","Create new home case")}</button></div>
+  <div class="home-grid"><div class="stack" style="gap:20px">
+   <div class="kpis">${k.map(([ic,n,lab,tab])=>`<button class="card kpi" type="button" data-a="listtab" data-t="${tab}"><span class="ic-circle ${ic==="check"?"ok":""}">${I(ic)}</span><span><b class="num">${n}</b><span class="small muted">${lab}</span></span></button>`).join("")}</div>
+   <section class="card stack"><div class="row between"><h2>${L("Mine boligsager","My home cases")}</h2></div>${listTabs()}${caseTable(filtered())}</section>
+  </div>
+  <aside class="stack home-aside" style="gap:20px">
+   <section class="card"><div class="row between" style="margin-bottom:6px"><h2>${L("Opgaver i dag","Today's tasks")}</h2></div>
+    ${tk.length?tk.map(t=>`<div class="task ${S.tasksDone[t.id]?"done":""}"><input type="checkbox" id="tk${esc(t.id)}" data-a="task" data-id="${esc(t.id)}" ${S.tasksDone[t.id]?"checked":""} aria-label="${L("Markér som udført","Mark as done")}" style="width:18px;height:18px;accent-color:var(--accent)">
+      <div><div class="t-title" data-a="open" data-id="${t.c.id}">${esc(t.t)}</div><div class="small muted">${esc(t.s)}</div></div></div>`).join(""):`<p class="muted small">${L("Ingen opgaver lige nu.","No tasks right now.")}</p>`}</section>
+   <section class="card"><div class="row between" style="margin-bottom:6px"><h2>${L("Seneste beskeder","Latest messages")}</h2><button class="btn link small" type="button" data-a="nav" data-p="messages">${L("Se alle","See all")}</button></div>
+    ${msgs.slice(0,3).map(m=>`<div class="msg" data-a="open" data-id="${m.c.id}"><span class="avatar">${initials(m.from)}</span><div style="min-width:0"><b style="color:var(--ink)">${esc(m.from)}</b><div class="small muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(S.lang==="da"?m.da:m.en)}</div></div><div class="tiny muted" style="text-align:right">${rel(m.d)}${m.unread?`<div class="dot" style="margin:6px 0 0 auto"></div>`:""}</div></div>`).join("")}</section>
+   <section class="note">${I("bulb")}<div><b style="color:var(--ink)">${L("Tip til en hurtigere proces","Tip for a faster process")}</b><p class="small">${L("Send invitationen mens kunden sidder hos dig. Så kan data hentes, mens I taler om mulighederne.","Send the invitation while the customer is with you. Data can then be collected while you discuss the options.")}</p></div></section>
+  </aside></div>`;
+}
+function listTabs(){
+  const l=myCases();const c=f=>l.filter(f).length;
+  const T=[["all",L("Alle","All"),c(x=>statusOf(x)!=="done")],["awaiting",L("Afventer kunde","Awaiting customer"),c(x=>statusOf(x)==="awaiting")],["collecting",L("Indsamler data","Collecting data"),c(x=>["invited","collecting"].includes(statusOf(x)))],
+    ["ready",L("Klar til vurdering","Ready for assessment"),c(x=>statusOf(x)==="ready")],["credit",L("Under behandling","In credit review"),c(x=>statusOf(x)==="credit")],["done",L("Afsluttede","Closed"),c(x=>statusOf(x)==="done")]];
+  return `<div class="tabs" role="tablist">${T.map(([k,l,n])=>`<button type="button" role="tab" data-a="listtab" data-t="${k}" aria-selected="${S.listTab===k}">${l} (${n})</button>`).join("")}</div>`;
+}
+function pageCases(){return `<div class="stack" style="gap:18px"><div class="row between"><h1>${L("Boligsager","Home cases")}</h1><button class="btn pri" type="button" data-a="nav" data-p="new">${I("plus")}${L("Opret ny boligsag","Create new home case")}</button></div><section class="card stack">${listTabs()}${caseTable(filtered())}</section></div>`}
+function pageMessages(){
+  const msgs=[];myCases().forEach(c=>(c.messages||[]).forEach(m=>msgs.push({...m,c})));msgs.sort((x,y)=>x.d-y.d);
+  return `<div class="stack" style="gap:18px"><h1>${L("Beskeder","Messages")}</h1><section class="card">${msgs.map(m=>`<div class="msg" data-a="open" data-id="${m.c.id}"><span class="avatar">${initials(m.from)}</span><div style="min-width:0"><b style="color:var(--ink)">${esc(m.from)}</b> <span class="tiny muted">${m.c.id}</span><div class="small">${esc(S.lang==="da"?m.da:m.en)}</div></div><div class="tiny muted">${rel(m.d)} ${m.t}${m.unread?`<div class="dot" style="margin:6px 0 0 auto"></div>`:""}</div></div>`).join("")}</section></div>`;
+}
+
+/* ---------- Opret ny sag (6 trin) ---------- */
+const WSTEPS=()=>[L("Kunde","Customer"),L("Medansøger","Co-applicant"),L("Finansieringsformål","Purpose"),L("Sagsdetaljer","Case details"),L("Gennemgang","Review"),L("Send invitation","Send invitation")];
+const blankApp=()=>({first:"",last:"",cpr:"",email:"",phone:"",addr:"",zip:"",city:"",type:"emp",company:"",cvr:"",relation:0,sameAddr:true});
+function newWiz(){return {step:0,co:false,a:[blankApp(),blankApp()],purpose:"buy",price:"",downpay:"",loan:"",takeover:"",propType:0,propAddr:"",propZip:"",propCity:"",notes:"",broker:{firm:"",person:"",phone:""},
+  extras:{kob:true,gave:false,anden:false},confirm:false,msg:null,email:true,sms:true,reminders:true,err:[]}}
+function stepper(labels,cur){return `<div class="steps">${labels.map((l,i)=>`<div class="st ${i<cur?"done":i===cur?"cur":""}"><span class="st-dot">${i<cur?I("check"):i+1}</span><span class="st-l">${esc(l)}</span></div>`).join("")}</div>`}
+const wv=p=>{let o=S.wiz;p.split(".").forEach(k=>o=o?.[k]);return o??""};
+function wf(path,label,{type="text",req=false,ph="",suffix=""}={}){return `<label class="field"><span>${label}${req?" <em>*</em>":""}</span>${suffix?`<span class="row" style="gap:0;flex-wrap:nowrap"><input type="${type}" id="w-${path.replace(/\./g,"-")}" data-w="${path}" value="${esc(wv(path))}" placeholder="${esc(ph)}" style="border-radius:9px 0 0 9px"><span style="border:1px solid var(--line);border-left:0;padding:9px 12px;border-radius:0 9px 9px 0;background:var(--sunk)">${suffix}</span></span>`:`<input type="${type}" id="w-${path.replace(/\./g,"-")}" data-w="${path}" value="${esc(wv(path))}" placeholder="${esc(ph)}">`}</label>`}
+function typeChooser(i){const t=S.wiz.a[i].type;return `<div class="field"><span>${L("Beskæftigelse","Employment")} <em>*</em></span><div class="opts" role="radiogroup">
+  <button type="button" class="opt-btn" role="radio" data-a="wtype" data-i="${i}" data-t="emp" aria-pressed="${t==="emp"}" aria-checked="${t==="emp"}">${L("Lønmodtager","Employee")}</button>
+  <button type="button" class="opt-btn" role="radio" data-a="wtype" data-i="${i}" data-t="self" aria-pressed="${t==="self"}" aria-checked="${t==="self"}">${L("Selvstændig","Self-employed")}</button></div>
+  <span class="tiny muted">${t==="emp"?L("Kræver 3 lønsedler. Årsregnskab vises ikke.","Requires 3 payslips. Annual accounts are not shown."):L("Kræver 2 årsregnskaber + saldobalance. Lønsedler vises ikke.","Requires 2 annual accounts + trial balance. Payslips are not shown.")}</span></div>`}
+function appFields(i){
+  const p=`a.${i}.`;return `<div class="grid3">${wf(p+"first",L("Fornavn","First name"),{req:true})}${wf(p+"last",L("Efternavn","Last name"),{req:true})}${wf(p+"cpr",L("CPR-nummer","CPR number"),{req:true,ph:L("ddmmåå-xxxx","ddmmyy-xxxx")})}</div>
+  <div class="grid2">${wf(p+"email",L("E-mail","Email"),{type:"email",req:true})}${wf(p+"phone",L("Telefonnummer","Phone number"),{type:"tel",req:true,ph:"+45"})}</div>
+  ${i===1?`<div class="grid2"><label class="field"><span>${L("Relation til hovedansøger","Relation to main applicant")}</span><select id="w-rel" data-w="a.1.relation">${REL.map((r,k)=>`<option value="${k}" ${+S.wiz.a[1].relation===k?"selected":""}>${LL(r)}</option>`).join("")}</select></label>
+   <label class="field"><span>${L("Samme adresse som hovedansøger","Same address as main applicant")}</span><select id="w-same" data-w="a.1.sameAddr" data-rerender="1"><option value="1" ${S.wiz.a[1].sameAddr?"selected":""}>${L("Ja","Yes")}</option><option value="" ${!S.wiz.a[1].sameAddr?"selected":""}>${L("Nej","No")}</option></select></label></div>`:""}
+  ${i===0||!S.wiz.a[1].sameAddr?`<div class="grid3">${wf(p+"addr",L("Adresse","Address"),{req:true})}${wf(p+"zip",L("Postnummer","Postcode"),{req:true})}${wf(p+"city",L("By","City"),{req:true})}</div>`:""}
+  ${typeChooser(i)}
+  ${S.wiz.a[i].type==="self"?`<div class="grid2">${wf(p+"company",L("Virksomhedens navn","Company name"),{req:true})}${wf(p+"cvr",L("CVR-nummer","CVR number"),{req:true,ph:"12345678"})}</div>`:""}`;
+}
+function wizSide(){
+  const s=S.wiz.step;const tips=[
+   [L("Kunden identificerer sig med MitID","The customer identifies with MitID"),L("Data hentes automatisk fra SKAT, banker og PensionsInfo","Data is fetched automatically from SKAT, banks and PensionsInfo"),L("Du kan løbende følge kundens fremdrift","You can follow the customer's progress"),L("Beskæftigelsen afgør, om der kræves lønsedler eller årsregnskaber","Employment decides whether payslips or annual accounts are required")],
+   [L("Medansøger identificerer sig med sit eget MitID","The co-applicant uses their own MitID"),L("Medansøger ser kun oplysninger om sig selv","The co-applicant only sees their own information"),L("I får besked, når begge har indsendt","You are notified when both have submitted")],
+   [L("Formålet styrer, hvilke oplysninger der hentes","The purpose decides what information is fetched"),L("Og hvilke dokumenter kunden skal uploade","And which documents the customer must upload")],
+   [L("Når adressen er angivet, hentes BBR-data automatisk","Once the address is entered, BBR data is fetched automatically"),L("Udbetalingen skal være mindst 5 % af købsprisen","The down payment must be at least 5% of the price"),L("Ejendomsmægler er valgfri","Estate agent is optional")],
+   [L("Tjek oplysningerne før invitationen sendes","Check the details before sending the invitation"),L("Du kan altid redigere sagen senere","You can always edit the case later")],
+   [L("Brug en personlig besked","Use a personal message"),L("Linket er gyldigt i 30 dage","The link is valid for 30 days"),L("Automatiske påmindelser efter 3 og 7 dage","Automatic reminders after 3 and 7 days")]][s];
+  return `<aside class="stack"><section class="card stack"><div class="row">${I("bulb")}<h3>${L("Godt at vide","Good to know")}</h3></div><ul class="checklist small">${tips.map(t=>`<li>${I("check")}<span>${t}</span></li>`).join("")}</ul></section>
+   ${s===0?`<section class="card stack"><h3>${L("Hurtig demo","Quick demo")}</h3><p class="small muted">${L("Udfyld sagen med fiktive eksempeldata.","Fill in the case with fictitious sample data.")}</p><div class="opts"><button class="btn sm" type="button" data-a="wdemo" data-k="emp">${L("1 lønmodtager","1 employee")}</button><button class="btn sm" type="button" data-a="wdemo" data-k="self">${L("1 selvstændig","1 self-employed")}</button><button class="btn sm" type="button" data-a="wdemo" data-k="pair">${L("Selvst. + lønm.","Self-emp. + emp.")}</button></div></section>`:""}</aside>`;
+}
+function requiredFor(type){return req({type}).map(n=>LL(DOC[n]))}
+function wizStep(){
+  const w=S.wiz,s=w.step;const errs=w.err.length?`<div class="note warn">${I("info")}<div class="small">${w.err.map(esc).join("<br>")}</div></div>`:"";
+  if(s===0)return `<section class="card stack"><div class="row between"><h2>${L("Kundeoplysninger","Customer details")}</h2></div>${appFields(0)}
+    <div class="note">${I("info")}<div class="small"><b>${L("Kunden modtager en sikker invitation til at indsamle sine oplysninger.","The customer receives a secure invitation to collect their information.")}</b><br>${L("Invitationen sendes på e-mail og/eller SMS, når du har gennemgået sagen. CPR-nummeret vises maskeret efter oprettelse.","The invitation is sent by email and/or SMS once you have reviewed the case. The CPR number is masked after creation.")}</div></div>${errs}</section>`;
+  if(s===1)return `<section class="card stack"><div class="row between"><h2>${L("Medansøger","Co-applicant")}</h2><label class="row small" style="gap:10px;cursor:pointer"><button type="button" class="toggle" role="switch" aria-checked="${w.co}" data-a="wco" aria-label="${L("Har medansøger","Has co-applicant")}"></button>${L("Har medansøger","Has co-applicant")}</label></div>
+    ${w.co?appFields(1)+`<div class="note">${I("info")}<p class="small">${L("Medansøger modtager sin egen invitation og logger ind med sit eget MitID.","The co-applicant receives their own invitation and signs in with their own MitID.")}</p></div>`:`<p class="muted">${L("Kunden ansøger alene. Slå medansøger til, hvis to skal stå på lånet.","The customer applies alone. Turn on co-applicant if two people will be on the loan.")}</p>`}${errs}</section>`;
+  if(s===2)return `<section class="card stack"><h2>${L("Hvad er formålet med finansieringen?","What is the purpose of the financing?")}</h2><div class="stack" style="gap:10px" role="radiogroup">
+    ${Object.entries(PURP).map(([k,p])=>`<button type="button" class="radio-card" role="radio" aria-checked="${w.purpose===k}" data-a="wpurp" data-k="${k}"><span class="radio-dot"></span><span class="ic-circle">${I(p.ic)}</span><span><b style="color:var(--ink)">${LL(p.a)}</b><br><span class="small muted">${LL(p.ad)}</span></span></button>`).join("")}</div></section>`;
+  if(s===3){const pur=PURCHASE(w.purpose),prop=PURP[w.purpose].prop;const price=+w.price||0,dp=+w.downpay||0;const dpPct=price?dp/price:null;
+    return `<section class="card stack"><h2>${L("Sagsdetaljer","Case details")}</h2>
+    <div class="grid2">${pur?wf("price",w.purpose==="cert"?L("Ønsket maksimal købspris","Desired maximum price"):L("Forventet købspris","Expected purchase price"),{type:"number",req:true,suffix:"kr."})+wf("downpay",L("Udbetaling","Down payment"),{type:"number",req:true,suffix:"kr."})
+      :wf("price",L("Ejendommens værdi (anslået)","Property value (estimated)"),{type:"number",suffix:"kr."})+wf("loan",L("Ønsket lånebeløb","Requested loan amount"),{type:"number",req:true,suffix:"kr."})}</div>
+    ${pur&&price?`<div class="note ${dpPct!=null&&dpPct<0.05?"warn":"ok"}">${I(dpPct!=null&&dpPct<0.05?"info":"check")}<div class="small">${L("Lånebehov","Loan need")}: <b>${kr(Math.max(0,price-dp))}</b> · ${L("Udbetaling","Down payment")}: <b>${pct(dpPct)}</b> ${dpPct!=null&&dpPct<0.05?L("– under kravet på 5 %","– below the 5% requirement"):""}</div></div>`:""}
+    <div class="grid2">${w.purpose!=="cert"?wf("takeover",L("Ønsket overtagelsesdato","Desired takeover date"),{type:"date"}):""}<label class="field"><span>${L("Ejendomstype","Property type")} <em>*</em></span><select id="w-ptype" data-w="propType">${PROP.map((p,i)=>`<option value="${i}" ${+w.propType===i?"selected":""}>${LL(p)}</option>`).join("")}</select></label></div>
+    ${prop?`<div class="grid3">${wf("propAddr",L("Adresse på ejendommen","Property address"),{req:true})}${wf("propZip",L("Postnummer","Postcode"),{req:true})}${wf("propCity",L("By","City"),{req:true})}</div>`:""}
+    <label class="field"><span>${L("Særlige forhold","Special circumstances")}</span><textarea id="w-notes" data-w="notes" maxlength="500">${esc(w.notes)}</textarea></label>
+    <h3>${L("Ejendomsmægler","Estate agent")} <span class="muted small" style="font-weight:500">(${L("valgfri","optional")})</span></h3>
+    <div class="grid3">${wf("broker.firm",L("Mæglerfirma","Agency"))}${wf("broker.person",L("Kontaktperson","Contact person"))}${wf("broker.phone",L("Telefonnummer","Phone number"),{type:"tel"})}</div>${errs}</section>`}
+  if(s===4){const ap=w.a.slice(0,w.co?2:1);
+    const card=(ic,title,body,step)=>`<div class="card flat stack" style="gap:8px"><div class="row between"><div class="row" style="gap:8px">${I(ic)}<h3>${title}</h3></div><button class="btn link small" type="button" data-a="wgo" data-s="${step}">${L("Rediger","Edit")}</button></div><div class="small">${body}</div></div>`;
+    return `<section class="card stack"><h2>${L("Gennemgang af sag","Case review")}</h2><p class="muted">${L("Her er en opsummering af de indtastede oplysninger.","Here is a summary of the details entered.")}</p><div class="sumcards">
+     ${ap.map((a,i)=>card(i?"users":"user",i?L("Medansøger","Co-applicant"):L("Kunde","Customer"),`<b>${esc(a.first+" "+a.last)}</b><br>${esc(a.cpr.slice(0,6))}-XXXX<br>${esc(a.email)}<br>${esc(a.phone)}<br>${esc(i&&a.sameAddr?w.a[0].addr:a.addr)}, ${esc(i&&a.sameAddr?w.a[0].zip+" "+w.a[0].city:a.zip+" "+a.city)}<br><span class="pill p-info" style="margin-top:6px">${a.type==="emp"?L("Lønmodtager","Employee"):L("Selvstændig","Self-employed")+(a.company?" · "+esc(a.company):"")}</span>`,i)).join("")}
+     ${card(PURP[w.purpose].ic,L("Formål","Purpose"),`<b>${LL(PURP[w.purpose].a)}</b><br>${w.price?L("Købspris/værdi","Price/value")+": "+kr(+w.price)+"<br>":""}${PURCHASE(w.purpose)?L("Udbetaling","Down payment")+": "+kr(+w.downpay)+"<br>":""}${L("Lånebeløb","Loan")+": "+kr(PURCHASE(w.purpose)?Math.max(0,(+w.price||0)-(+w.downpay||0)):+w.loan)}`,2)}
+     ${card("home",L("Ejendom","Property"),`${LL(PROP[w.propType])}<br>${w.propAddr?esc(w.propAddr)+", "+esc(w.propZip+" "+w.propCity):L("Ingen konkret bolig endnu","No specific home yet")}${w.takeover?"<br>"+L("Overtagelse","Takeover")+": "+esc(w.takeover):""}${w.notes?"<br><span class='muted'>"+esc(w.notes)+"</span>":""}`,3)}
+     ${w.broker.firm?card("building",L("Ejendomsmægler","Estate agent"),`${esc(w.broker.firm)}<br>${esc(w.broker.person)}<br>${esc(w.broker.phone)}`,3):""}
+    </div>
+    <h3>${L("Dokumenter, der kræves","Required documents")}</h3>
+    <div class="grid2">${ap.map(a=>`<div class="card flat"><b>${esc(a.first||L("Ansøger","Applicant"))}</b> · <span class="small muted">${a.type==="emp"?L("Lønmodtager","Employee"):L("Selvstændig","Self-employed")}</span><ul class="small" style="margin:8px 0 0;padding-left:18px">${requiredFor(a.type).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`).join("")}
+     <div class="card flat"><b>${L("Fælles for sagen","Shared for the case")}</b><ul class="small" style="margin:8px 0 0;padding-left:18px"><li>${L("Budget","Budget")}</li>${PURP[w.purpose].prop&&w.propAddr?`<li>${LL(EXTRA.bbr)}</li>`:""}</ul></div></div>
+    <label class="check"><input type="checkbox" id="w-confirm" data-a="wconfirm" ${w.confirm?"checked":""}><span>${L("Jeg har gennemgået og bekræfter, at ovenstående oplysninger er korrekte.","I have reviewed and confirm that the details above are correct.")}</span></label>${errs}</section>`}
+  if(s===5){const ap=w.a.slice(0,w.co?2:1);if(w.msg===null)w.msg=defaultMsg();
+    return `<section class="card stack"><h2>1. ${L("Vælg, hvad kunden skal indsende","Choose what the customer must submit")}</h2>
+     <div class="doclist">${ap.map(a=>req(a).map(n=>`<div class="docline"><input type="checkbox" checked disabled aria-label="${esc(LL(DOC[n]))}"><span>${esc(LL(DOC[n]))} ${ap.length>1?`<span class="muted small">· ${esc(a.first)}</span>`:""}</span><span class="tiny muted">${[5,11].includes(n)?L("Kunden uploader","Customer uploads"):n===1?L("Delvist automatisk","Partly automatic"):L("Hentes automatisk","Fetched automatically")}</span></div>`).join("")).join("")}
+      <div class="docline"><input type="checkbox" checked disabled aria-label="${L("Budget","Budget")}"><span>${L("Budget","Budget")}</span><span class="tiny muted">${L("Kunden udfylder","Customer fills in")}</span></div>
+      ${["kob","gave","anden"].map(k=>`<label class="docline" style="cursor:pointer"><input type="checkbox" id="w-x-${k}" data-a="wextra" data-k="${k}" ${w.extras[k]?"checked":""}><span>${esc(LL(EXTRA[k]))} <span class="muted small">(${L("valgfri","optional")})</span></span><span class="tiny muted">${L("Kunden uploader","Customer uploads")}</span></label>`).join("")}</div>
+     <p class="tiny muted">${L("Punkter for ansøgerens beskæftigelse kan ikke fravælges.","Items tied to the applicant's employment cannot be removed.")}</p>
+     <h2>2. ${L("Skriv personlig besked","Write a personal message")} <span class="muted small" style="font-weight:500">(${L("valgfri","optional")})</span></h2>
+     <textarea id="w-msg" data-w="msg" style="min-height:150px">${esc(w.msg)}</textarea>
+     <h2>3. ${L("Send via","Send via")}</h2>
+     <div class="row"><label class="check"><input type="checkbox" id="w-email" data-a="wch" data-k="email" ${w.email?"checked":""}><span>${L("E-mail","Email")}</span></label><label class="check"><input type="checkbox" id="w-sms" data-a="wch" data-k="sms" ${w.sms?"checked":""}><span>SMS</span></label><label class="check"><input type="checkbox" id="w-rem" data-a="wch" data-k="reminders" ${w.reminders?"checked":""}><span>${L("Automatiske påmindelser efter 3 og 7 dage","Automatic reminders after 3 and 7 days")}</span></label></div>
+     <div class="preview-mail"><span class="eyebrow">${L("Forhåndsvisning","Preview")}</span>${bankMark(advInfo(ME).b.name)}<b style="color:var(--ink);font-size:1.05rem">${L("Vi skal bruge dine oplysninger","We need your information")}</b><div style="white-space:pre-wrap">${esc(w.msg)}</div><span class="btn pri" style="justify-self:start">${L("Gå til din boligsag","Go to your home case")} ${I("ar")}</span><span class="tiny muted">${L("Sikkert link · gyldigt i 30 dage","Secure link · valid for 30 days")}</span></div>${errs}</section>`}
+}
+function defaultMsg(){const w=S.wiz;const n=w.a.slice(0,w.co?2:1).map(a=>a.first||"").filter(Boolean).join(L(" og "," and "));const me=advInfo(ME);
+  return L(`Hej ${n}\n\nTak for en god samtale. Som aftalt sender jeg et link til jeres boligsag. De fleste oplysninger hentes automatisk, når I logger ind med MitID – resten kan I uploade direkte.\n\nHar I spørgsmål, er I altid velkomne til at kontakte mig.\n\nMed venlig hilsen\n${me.a.name}\nPrivatrådgiver, ${me.b.name}`,
+   `Hi ${n}\n\nThank you for a good meeting. As agreed, here is the link to your home case. Most information is fetched automatically when you sign in with MitID – you can upload the rest directly.\n\nIf you have any questions, feel free to contact me.\n\nKind regards\n${me.a.name}\nPersonal advisor, ${me.b.name}`)}
+function wizValidate(){
+  const w=S.wiz,s=w.step,e=[];
+  const chk=(a,who,i)=>{if(!a.first.trim()||!a.last.trim())e.push(who+L(": navn mangler",": name missing"));
+    if(!/^\d{6}-?\d{4}$/.test(a.cpr.trim()))e.push(who+L(": CPR-nummer skal have formatet ddmmåå-xxxx",": CPR number must use the format ddmmyy-xxxx"));
+    if(!/^\S+@\S+\.\S+$/.test(a.email.trim()))e.push(who+L(": ugyldig e-mail",": invalid email"));
+    if(a.phone.replace(/\D/g,"").length<8)e.push(who+L(": telefonnummer mangler",": phone number missing"));
+    if((i===0||!a.sameAddr)&&(!a.addr.trim()||!a.zip.trim()||!a.city.trim()))e.push(who+L(": adresse mangler",": address missing"));
+    if(a.type==="self"&&(!a.company.trim()||!/^\d{8}$/.test(a.cvr.trim())))e.push(who+L(": virksomhedsnavn og CVR-nummer (8 cifre) kræves for selvstændige",": company name and CVR number (8 digits) are required for self-employed"))};
+  if(s===0)chk(w.a[0],L("Kunde","Customer"),0);
+  if(s===1&&w.co)chk(w.a[1],L("Medansøger","Co-applicant"),1);
+  if(s===3){if(PURCHASE(w.purpose)){if(!(+w.price>0))e.push(L("Angiv købspris","Enter purchase price"));if(!(+w.downpay>=0)||w.downpay==="")e.push(L("Angiv udbetaling","Enter down payment"));
+      else if(+w.price>0&&+w.downpay/ +w.price<0.05)e.push(L("Udbetalingen skal være mindst 5 % af købsprisen","The down payment must be at least 5% of the price"))}
+    else if(!(+w.loan>0))e.push(L("Angiv ønsket lånebeløb","Enter requested loan amount"));
+    if(PURP[w.purpose].prop&&(!w.propAddr.trim()||!w.propZip.trim()||!w.propCity.trim()))e.push(L("Angiv ejendommens adresse","Enter the property address"))}
+  if(s===4&&!w.confirm)e.push(L("Bekræft at oplysningerne er korrekte","Confirm that the details are correct"));
+  if(s===5&&!w.email&&!w.sms)e.push(L("Vælg mindst én kanal","Choose at least one channel"));
+  w.err=e;return !e.length;
+}
+function pageNew(){
+  const w=S.wiz;
+  return `<button class="btn link" type="button" data-a="nav" data-p="home">${I("al")} ${L("Tilbage til oversigt","Back to overview")}</button>
+  <div class="stack" style="margin:10px 0 18px"><h1>${L("Opret ny boligsag","Create new home case")}</h1><p class="muted">${L("Udfyld de grundlæggende oplysninger. Kunden modtager en invitation til at indsamle sine data, når du har oprettet sagen.","Fill in the basic details. The customer receives an invitation to collect their data once you have created the case.")}</p></div>
+  <div class="wiz-grid"><div class="stack" style="gap:18px">${stepper(WSTEPS(),w.step)}${wizStep()}
+   <div class="navrow">${w.step===0?`<button class="btn" type="button" data-a="nav" data-p="home">${L("Annullér","Cancel")}</button>`:`<button class="btn" type="button" data-a="wprev">${I("al")} ${L("Forrige","Previous")}</button>`}
+   ${w.step<5?`<button class="btn pri" type="button" data-a="wnext">${w.step===1&&!w.co?L("Spring over","Skip"):L("Næste","Next")} ${I("ar")}</button>`:`<button class="btn pri" type="button" data-a="wcreate">${I("send")} ${L("Opret sag og send invitation","Create case and send invitation")}</button>`}</div></div>${wizSide()}</div>`;
+}
+function wizCreate(){
+  const w=S.wiz;const ap=w.a.slice(0,w.co?2:1).map((x,i)=>{const src=i&&x.sameAddr?w.a[0]:x;
+    return mkA({first:x.first.trim(),last:x.last.trim(),cpr:x.cpr.trim().slice(0,6)+"-XXXX",email:x.email.trim(),phone:x.phone.trim(),addr:src.addr,zip:src.zip,city:src.city,type:x.type,company:x.company.trim(),cvr:x.cvr.trim(),relation:+x.relation})});
+  const pur=PURCHASE(w.purpose);
+  const c=mkCase({created:0,purpose:w.purpose,price:+w.price||0,downpay:pur?(+w.downpay||0):0,loan:pur?0:(+w.loan||0),propType:+w.propType,propAddr:PURP[w.purpose].prop?w.propAddr.trim():"",propZip:w.propZip,propCity:w.propCity,takeover:w.takeover,notes:w.notes,
+    broker:{...w.broker},extras:{...w.extras},apps:ap,reminders:w.reminders,msg:w.msg});
+  c.history=[H(0,nowHM(),L("Invitation sendt til ","Invitation sent to ")+names(c),"Invitation sent to "+names(c))];
+  c.history[0].da="Invitation sendt til "+names(c);
+  CASES.unshift(c);S.invited={id:c.id,email:w.email,sms:w.sms};S.page="invited";S.wiz=null;
+}
+function pageInvited(){
+  const c=byId(CASES,S.invited.id);
+  return `<button class="btn link" type="button" data-a="open" data-id="${c.id}">${I("al")} ${L("Til sagen","To the case")}</button>
+  <div class="stack" style="margin:10px 0 18px"><h1>${L("Invitation sendt","Invitation sent")}</h1><p class="muted">${L("Kunden har nu modtaget invitationen til at indsende oplysninger.","The customer has now received the invitation to submit information.")}</p></div>
+  <div class="wiz-grid"><div class="stack" style="gap:18px">${stepper(WSTEPS(),6)}
+   <section class="card stack"><div class="row" style="gap:18px;align-items:flex-start"><span class="big-check">${I("send")}</span><div class="stack" style="gap:8px;flex:1;min-width:220px"><h2 style="color:var(--ok)">${L("Invitationen er sendt","The invitation has been sent")}</h2>
+    <p>${c.apps.map(a=>`${L("En sikker besked er sendt til","A secure message was sent to")} <b>${esc(fullName(a))}</b> (${esc(a.email)}${S.invited.sms?", "+esc(a.phone):""}).`).join("<br>")}</p>
+    <div class="row"><button class="btn" type="button" data-a="remind" data-id="${c.id}">${I("mail")} ${L("Send påmindelse","Send reminder")}</button><button class="btn pri" type="button" data-a="open" data-id="${c.id}">${L("Se sagens status","View case status")} ${I("ar")}</button></div></div></div>
+    <div class="tbl-wrap"><table><tbody>
+     <tr><td class="muted">${L("Sagsnummer","Case number")}</td><td><b>${c.id}</b></td></tr><tr><td class="muted">${L("Sendt af","Sent by")}</td><td>${esc(advInfo(ME).a.name)}</td></tr>
+     <tr><td class="muted">${L("Dato og tidspunkt","Date and time")}</td><td>${fdate(0)} ${L("kl.","at")} ${c.history[0].t}</td></tr><tr><td class="muted">${L("Link gyldigt i","Link valid for")}</td><td>${L("30 dage","30 days")}</td></tr>
+     <tr><td class="muted">${L("Påmindelser","Reminders")}</td><td>${c.reminders?L("Automatisk efter 3 og 7 dage, hvis kunden ikke har svaret","Automatically after 3 and 7 days if the customer has not responded"):L("Slået fra","Off")}</td></tr></tbody></table></div></section>
+   <section class="card stack"><h3>${L("Handlingsmuligheder","Actions")}</h3><div class="grid3">
+    <button class="card flat kpi" type="button" data-a="cusopen" data-id="${c.id}" data-i="0">${I("eye")}<span><b style="font-size:1rem">${L("Åbn kundens visning","Open customer view")}</b><span class="small muted">${L("Se det, kunden ser (demo)","See what the customer sees (demo)")}</span></span></button>
+    <button class="card flat kpi" type="button" data-a="copylink" data-id="${c.id}" data-i="0">${I("doc")}<span><b style="font-size:1rem">${L("Kopiér kundelink","Copy customer link")}</b><span class="small muted">${L("Til fx en sms fra din egen telefon","E.g. for a text from your own phone")}</span></span></button>
+    <button class="card flat kpi" type="button" data-a="nav" data-p="new">${I("plus")}<span><b style="font-size:1rem">${L("Opret ny sag","New case")}</b><span class="small muted">${L("Start forfra med en ny kunde","Start over with a new customer")}</span></span></button></div></section>
+  </div><aside class="card stack"><h3>${L("Hvad sker der nu?","What happens now?")}</h3><ol class="timeline">${[L("Kunden modtager invitationen via e-mail eller SMS","The customer receives the invitation by email or SMS"),L("Kunden logger ind med MitID og giver samtykke","The customer signs in with MitID and gives consent"),L("Du får besked, når kunden har indsendt","You are notified when the customer has submitted"),L("Du gennemgår oplysningerne og sender til kreditvurdering","You review and send for credit assessment")].map((t,i)=>`<li><span class="tl-dot ${i===0?"cur":""}">${i+1}</span><span class="small">${t}</span></li>`).join("")}</ol></aside></div>`;
+}
+
+/* ---------- Sagsvisning ---------- */
+function pageCase(){
+  const c=byId(CASES,S.caseId);const st=statusOf(c);const p=progress(c);
+  const tabs=[["overview",L("Sagsoverblik","Case overview")],["docs",L("Dokumentation","Documentation")+` (${p.r}/${p.total})`],["econ",L("Økonomi","Finances")],["hist",L("Historik","History")]];
+  const flow=[[L("Invitation sendt","Invitation sent"),true],[L("Kunden er i gang","Customer in progress"),c.apps.some(a=>a.mitid)],[L("Oplysninger indsendt","Information submitted"),c.apps.every(a=>a.submitted)],[L("Klar til vurdering","Ready for assessment"),p.missing===0],[L("Under behandling","In credit review"),c.stage!=="open"]];
+  const curIdx=flow.findIndex(f=>!f[1]);
+  return `<button class="btn link" type="button" data-a="nav" data-p="cases">${I("al")} ${L("Tilbage til boligsager","Back to home cases")}</button>
+  <div class="case-head" style="margin:10px 0 16px"><div class="stack" style="gap:8px"><div class="row"><h1>${L("Sag","Case")}: ${esc(names(c))}</h1>${pill(st,CST)}</div>
+   <div class="row muted">${I(PURP[c.purpose].ic)}<b style="color:var(--ink)">${LL(PURP[c.purpose].a)}</b>${c.propAddr?`<span>${esc(c.propAddr)}, ${esc(c.propZip+" "+c.propCity)}</span>`:""}<span class="tiny">${c.id}</span></div></div>
+   <div class="apps-mini">${c.apps.map((a,i)=>`<div><div class="eyebrow">${i?L("Medansøger","Co-applicant"):L("Kunde","Customer")}</div><b style="color:var(--ink)">${esc(fullName(a))}</b><div class="small muted">${cpr(a)} · ${typeL(a)}</div></div>`).join("")}</div></div>
+  <div class="tabs" role="tablist" style="margin-bottom:18px">${tabs.map(([k,l])=>`<button type="button" role="tab" data-a="tab" data-t="${k}" aria-selected="${S.tab===k}">${l}</button>`).join("")}</div>
+  <div class="case-grid"><div class="stack" style="gap:18px">${S.tab==="overview"?caseOverview(c):S.tab==="docs"?caseDocs(c):S.tab==="econ"?caseEcon(c):caseHist(c)}</div>
+  <aside class="stack" style="gap:18px">
+   <section class="card stack"><div class="row" style="gap:16px"><svg viewBox="0 0 36 36" width="74" height="74" aria-hidden="true"><circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--sunk)" stroke-width="4"/><circle cx="18" cy="18" r="15.5" fill="none" stroke="${p.missing?"var(--accent)":"var(--ok)"}" stroke-width="4" stroke-dasharray="${p.pct*0.974} 100" transform="rotate(-90 18 18)" stroke-linecap="round"/><text x="18" y="21.5" text-anchor="middle" font-size="7.5" font-weight="800" fill="var(--ink)">${p.pct}%</text></svg>
+    <div><div class="eyebrow">${L("Næste skridt","Next step")}</div><b style="color:var(--ink)">${esc(nextStep(c))}</b><div class="small muted">${p.r} ${L("af","of")} ${p.total} ${L("punkter modtaget","items received")}</div></div></div>
+    <ol class="timeline">${flow.map((f,i)=>`<li><span class="tl-dot ${f[1]?"on":i===curIdx?"cur":""}">${f[1]?I("check"):""}</span><span class="small ${f[1]?"":"muted"}">${f[0]}</span></li>`).join("")}</ol>
+    ${c.stage==="open"?`<button class="btn pri" type="button" data-a="tocredit" ${p.missing?"disabled":""}>${I("send")} ${L("Send til kreditvurdering","Send to credit assessment")}</button>${p.missing?`<p class="tiny muted">${L("Kan sendes, når alle krævede punkter er modtaget.","Can be sent once all required items are received.")}</p>`:""}`:c.stage==="credit"?`<button class="btn" type="button" data-a="close">${L("Markér sagen som afsluttet","Mark case as closed")}</button>`:""}
+    ${c.stage==="open"&&p.missing?`<button class="btn" type="button" data-a="remind" data-id="${c.id}">${I("mail")} ${L("Send påmindelse","Send reminder")}</button>`:""}</section>
+   <section class="card stack"><h3>${L("Kundeaktivitet","Customer activity")}</h3>${c.history.slice(0,4).map(h=>`<div class="row" style="gap:10px;align-items:flex-start;flex-wrap:nowrap"><span class="ic-circle ok" style="width:28px;height:28px">${I("check")}</span><div class="small"><div>${esc(S.lang==="da"?h.da:h.en)}</div><div class="muted">${rel(h.d)} ${L("kl.","at")} ${h.t}</div></div></div>`).join("")}
+    <button class="btn link small" type="button" data-a="tab" data-t="hist">${L("Se al aktivitet","See all activity")} ${I("ar")}</button></section></aside></div>`;
+}
+function nextStep(c){
+  const st=statusOf(c);if(st==="credit")return L("Afventer kreditvurdering","Awaiting credit assessment");if(st==="done")return L("Sagen er afsluttet","Case closed");
+  if(st==="ready")return L("Gennemgå og send til kreditvurdering","Review and send to credit assessment");
+  if(allItems(c).some(x=>x.st.s==="rejected"))return L("Afvist dokument skal erstattes","Rejected document must be replaced");
+  if(st==="invited")return L("Afventer at kunden åbner linket","Waiting for the customer to open the link");
+  if(c.apps.some(a=>a.mitid&&!a.submitted))return L("Kunden er i gang med at indsende","Customer is submitting");
+  if(c.apps.some(a=>!a.mitid))return L("Afventer medansøgers samtykke","Awaiting co-applicant's consent");
+  return L("Afventer kundens dokumentation","Awaiting customer documentation");
+}
+function caseOverview(c){
+  const e=econ(c);
+  return `<section class="card stack"><div class="row between"><h2>${L("Status på nødvendige oplysninger","Status of required information")}</h2></div>
+   ${c.apps.map((a,i)=>{const it=req(a).map(n=>docState(c,a,n));const r=it.filter(x=>RECEIVED(x.s)).length;
+    return `<div class="stack" style="gap:8px;padding:12px 0;border-top:${i?"1px solid var(--line)":"0"}"><div class="row between"><div><b style="color:var(--ink)">${esc(fullName(a))}</b> <span class="small muted">· ${typeL(a)}${a.company?" · "+esc(a.company):""}</span></div>
+     <span class="small">${a.submitted?pill("upload").replace(LL(ST.upload),L("Har indsendt","Submitted")):a.mitid?`<span class="pill p-info">${L("I gang","In progress")}</span>`:`<span class="pill p-grey">${L("Har ikke åbnet linket","Has not opened the link")}</span>`}</span></div>
+     <div class="prog"><div class="bar ${r===it.length?"full":""}"><i style="width:${Math.round(r/it.length*100)}%"></i></div><span class="num small">${r}/${it.length}</span></div>
+     <div class="row small"><button class="btn sm" type="button" data-a="cusopen" data-id="${c.id}" data-i="${i}">${I("eye")} ${L("Åbn kundens visning","Open customer view")}</button><button class="btn sm" type="button" data-a="copylink" data-id="${c.id}" data-i="${i}">${L("Kopiér link","Copy link")}</button></div></div>`}).join("")}
+   <button class="btn link small" type="button" data-a="tab" data-t="docs">${L("Se alle dokumenter","See all documents")} ${I("ar")}</button></section>
+  <section class="card stack"><h2>${L("Boligens nøgletal","Property key figures")}</h2><dl class="kv">
+   ${c.price?`<dt>${PURCHASE(c.purpose)?L("Kontantpris","Cash price"):L("Ejendommens værdi","Property value")}</dt><dd class="num">${kr(c.price)}</dd>`:""}${PURCHASE(c.purpose)?`<dt>${L("Udbetaling","Down payment")}</dt><dd class="num">${kr(c.downpay)} (${pct(e.downPct)})</dd>`:""}
+   <dt>${L("Lånebehov","Loan need")}</dt><dd class="num">${kr(e.loan)}</dd><dt>${L("Boligtype","Property type")}</dt><dd>${LL(PROP[c.propType])}</dd>
+   ${c.propAddr?`<dt>${L("Boligareal (BBR)","Living area (BBR)")}</dt><dd>${90+(c.propAddr.length*7)%90} m²</dd><dt>${L("Opført (BBR)","Built (BBR)")}</dt><dd>${1930+(c.propAddr.length*13)%90}</dd>`:""}
+   ${c.takeover?`<dt>${L("Overtagelse","Takeover")}</dt><dd>${esc(c.takeover)}</dd>`:""}${c.broker.firm?`<dt>${L("Mægler","Estate agent")}</dt><dd>${esc(c.broker.firm)}, ${esc(c.broker.person)}</dd>`:""}
+   ${c.notes?`<dt>${L("Særlige forhold","Special circumstances")}</dt><dd style="font-weight:500">${esc(c.notes)}</dd>`:""}</dl></section>
+  <section class="card stack"><h2>${L("Kundeopsummering","Customer summary")}</h2><p class="small muted">${L("Din vurdering af kunden til kreditafdelingen: økonomi, stabilitet og særlige forhold.","Your assessment of the customer for the credit department: finances, stability and special circumstances.")}</p>
+   <textarea id="summary">${esc(c.summary)}</textarea><div><button class="btn" type="button" data-a="savesum">${L("Gem opsummering","Save summary")}</button></div></section>
+  <section class="card stack"><h2>${L("Kontaktoplysninger","Contact details")}</h2><div class="grid2">${c.apps.map((a,i)=>`<dl class="kv"><dt>${i?L("Medansøger","Co-applicant"):L("Kunde","Customer")}</dt><dd>${esc(fullName(a))}</dd><dt>${L("CPR","CPR")}</dt><dd>${cpr(a)}</dd><dt>${L("E-mail","Email")}</dt><dd>${esc(a.email)}</dd><dt>${L("Telefon","Phone")}</dt><dd>${esc(a.phone)}</dd><dt>${L("Adresse","Address")}</dt><dd>${esc(a.addr)}, ${esc(a.zip+" "+a.city)}</dd>${i?`<dt>${L("Relation","Relation")}</dt><dd>${LL(REL[a.relation])}</dd>`:""}</dl>`).join("")}</div></section>`;
+}
+function docRow(c,ai,n,st,name){
+  const key=`${ai===null?"c":ai}|${n}`;const recv=RECEIVED(st.s);
+  let act="";
+  if(recv)act+=`<button class="btn sm" type="button" data-a="viewdoc" data-k="${key}">${L("Vis","View")}</button>`;
+  if((st.s==="upload"||st.s==="filled")&&c.stage==="open"&&n!==1)act+=`<button class="btn sm" type="button" data-a="reject" data-k="${key}">${L("Afvis","Reject")}</button>`;
+  if(!recv&&c.stage==="open")act+=`<button class="btn sm" type="button" data-a="request" data-k="${key}">${L("Anmod","Request")}</button>`;
+  const rej=S.rejecting===key?`<div class="rejbox"><label class="field"><span>${L("Begrundelse til kunden","Reason for the customer")}</span><input type="text" id="rejReason" placeholder="${L("Fx: lønseddel for august mangler","E.g. the August payslip is missing")}"></label><div class="row"><button class="btn sm pri" type="button" data-a="dorej" data-k="${key}">${L("Afvis dokument","Reject document")}</button><button class="btn sm" type="button" data-a="cancelrej">${L("Annullér","Cancel")}</button></div></div>`:"";
+  return `<tr><td><div class="row" style="gap:8px;flex-wrap:nowrap">${I("doc")}<div><div style="font-weight:600">${esc(name)}</div>${st.reason?`<div class="tiny" style="color:var(--bad)">${esc(st.reason)}</div>`:""}${st.files?`<div class="tiny muted">${st.files.length} ${L("fil(er)","file(s)")}</div>`:""}${rej}</div></div></td>
+   <td class="small">${esc(st.src)}</td><td>${pill(st.s)}</td><td class="small num">${st.d!=null&&recv?fdate(st.d):"–"}</td><td><div class="row" style="gap:6px;flex-wrap:nowrap">${act}</div></td></tr>`;
+}
+function caseDocs(c){
+  const head=`<thead><tr><th>${L("Dokument","Document")}</th><th>${L("Kilde","Source")}</th><th>${L("Status","Status")}</th><th>${L("Modtaget","Received")}</th><th>${L("Handling","Action")}</th></tr></thead>`;
+  const sag=sagItems(c);const sr=sag.filter(x=>RECEIVED(x.st.s)).length;
+  return `<section class="card stack"><div class="row between"><div><h2>${L("Dokumentation","Documentation")}</h2><p class="small muted">${L("Automatiske kilder hentes, når kunden giver samtykke. Uploads kan afvises med en begrundelse, som kunden ser.","Automatic sources are fetched once the customer consents. Uploads can be rejected with a reason the customer sees.")}</p></div>
+   ${c.stage==="open"?`<button class="btn" type="button" data-a="remind" data-id="${c.id}">${I("send")} ${L("Send påmindelse","Send reminder")}</button>`:""}</div>
+   ${c.apps.map((a,i)=>{const it=req(a).map(n=>({n,st:docState(c,a,n)}));const r=it.filter(x=>RECEIVED(x.st.s)).length;
+     return `<div class="stack" style="gap:8px"><div class="row between"><h3 style="border-left:3px solid var(--accent);padding-left:10px">${esc(fullName(a))} <span class="small muted" style="font-weight:500">· ${typeL(a)}</span></h3><span class="small muted">${r} ${L("af","of")} ${it.length} ${L("modtaget","received")}</span></div>
+      <div class="tbl-wrap"><table>${head}<tbody>${it.map(x=>docRow(c,i,x.n,x.st,LL(DOC[x.n]))).join("")}</tbody></table></div></div>`}).join("")}
+   <div class="stack" style="gap:8px"><div class="row between"><h3 style="border-left:3px solid var(--accent);padding-left:10px">${L("Fælles for sagen","Shared for the case")}</h3><span class="small muted">${sr} ${L("af","of")} ${sag.length} ${L("modtaget","received")}</span></div>
+    <div class="tbl-wrap"><table>${head}<tbody>${sag.map(x=>docRow(c,null,x.k,x.st,x.name)).join("")}</tbody></table></div></div></section>`;
+}
+function caseEcon(c){
+  const e=econ(c);const wait=`<span class="muted small">${L("Afventer data","Awaiting data")}</span>`;
+  const box=(ic,title,big,rows,extra="")=>`<div class="card flat stack" style="gap:8px"><div class="row" style="gap:10px"><span class="ic-circle" style="width:36px;height:36px">${I(ic)}</span><b style="color:var(--ink)">${title}</b></div><div class="big num">${big}</div>${rows?`<dl class="kv small">${rows}</dl>`:""}${extra}</div>`;
+  const incRows=c.apps.map((a,i)=>`<dt>${esc(a.first)} (${a.type==="emp"?L("løn","salary"):L("virksomhed","business")})</dt><dd class="num">${e.net[i]!=null?kr(e.net[i]):"–"}</dd>`).join("");
+  const netSum=e.net.every(x=>x!=null)?e.net.reduce((s,x)=>s+x,0):null;
+  return `<section class="card stack"><div class="row between"><div><h2>${L("Kundens økonomi","Customer finances")}</h2><p class="small muted">${L("Samlet overblik beregnet ud fra hentede data og kundens budget.","Overview calculated from fetched data and the customer's budget.")}</p></div></div>
+   <div class="econ">
+    ${box("wallet",L("Indtægter efter skat (md.)","Income after tax (mo.)"),netSum!=null?kr(netSum):wait,incRows)}
+    ${box("chart",L("Udgifter (md., fra budget)","Expenses (mo., from budget)"),e.exp!=null?kr(e.exp):wait,c.budget?`<dt>${L("Faste udgifter","Fixed costs")}</dt><dd class="num">${kr(e.exp-(+c.budget.food||0)-(+c.budget.other||0))}</dd><dt>${L("Variable udgifter","Variable costs")}</dt><dd class="num">${kr((+c.budget.food||0)+(+c.budget.other||0))}</dd>`:"")}
+    ${box("grid",L("Rådighedsbeløb (md.)","Disposable income (mo.)"),e.disp!=null?`<span style="color:${e.disp<0?"var(--bad)":"var(--ok)"}">${kr(e.disp)}</span>`:wait,"",`<p class="tiny muted">${L("Før ydelse på det nye lån.","Before payments on the new loan.")}</p>`)}
+    ${box("coins",L("Opsparing (fra bank)","Savings (from bank)"),e.savings!=null?kr(e.savings):wait,PURCHASE(c.purpose)?`<dt>${L("Ønsket udbetaling","Desired down payment")}</dt><dd class="num">${kr(c.downpay)}</dd>`:"")}
+    ${box("doc",L("Gæld (SKAT/Tinglysning)","Debt (SKAT/Land Registry)"),e.debtSum!=null?kr(e.debtSum):wait,e.debts.map(d=>`<dt>${esc(d.t)} · ${esc(d.who)}</dt><dd class="num">${kr(d.amt)}</dd>`).join(""))}
+    ${box("shield",L("Pension (PensionsInfo)","Pension (PensionsInfo)"),e.pension!=null?kr(e.pension):wait,"")}
+   </div></section>
+  <section class="card stack"><h2>${L("Nøgletal","Key figures")}</h2><div class="econ">
+    <div class="card flat"><div class="eyebrow">${L("Udbetaling","Down payment")}</div><div class="big num">${pct(e.downPct)}</div><p class="tiny muted">${L("Lovkrav: mindst 5 % af købsprisen","Legal requirement: at least 5% of the price")}</p></div>
+    <div class="card flat"><div class="eyebrow">${L("Belåning","Loan-to-value")}</div><div class="big num">${pct(e.ltv)}</div><p class="tiny muted">${L("Lånebehov / købspris eller værdi","Loan need / price or value")}</p></div>
+    <div class="card flat"><div class="eyebrow">${L("Gældsfaktor","Debt-to-income")}</div><div class="big num">${e.debtFactor!=null?e.debtFactor.toFixed(2).replace(".",S.lang==="da"?",":"."):"–"}</div><p class="tiny muted">${L("Samlet gæld efter lån / årlig bruttoindkomst","Total debt after loan / annual gross income")}</p></div></div>
+   <div class="note">${I("info")}<p class="small">${L("Nøgletallene er beregnet af Lån360 ud fra de hentede data og er et arbejdsgrundlag for rådgiveren – ikke en kreditvurdering.","The key figures are calculated by Lån360 from the fetched data and are a working basis for the advisor – not a credit assessment.")}</p></div></section>`;
+}
+function caseHist(c){return `<section class="card stack"><h2>${L("Historik","History")}</h2><ol class="timeline">${c.history.map(h=>`<li><span class="tl-dot on">${I("check")}</span><div class="small"><div>${esc(S.lang==="da"?h.da:h.en)}</div><div class="muted">${fdate(h.d)} ${L("kl.","at")} ${h.t}</div></div></li>`).join("")}</ol></section>`}
+function docPreview(c,key){
+  const [ai,nRaw]=key.split("|");const n=isNaN(+nRaw)?nRaw:+nRaw;const a=ai==="c"?c.apps[0]:c.apps[+ai];const f=a.fin;
+  const rows=[];let title=ai==="c"?(EXTRA[n]?LL(EXTRA[n]):LL(DOC[n])):LL(DOC[n]);
+  const st=ai==="c"?sagItems(c).find(x=>x.k===n).st:docState(c,a,n);
+  if(st.files)st.files.forEach(x=>rows.push([L("Fil","File"),x.n]));
+  else if(n===1)rows.push([L("Navn","Name"),fullName(a)],["CPR",cpr(a)],[L("Adresse","Address"),a.addr+", "+a.zip+" "+a.city],[L("Civilstand","Marital status"),a.civil!=null?LL(CIVIL[a.civil]):"–"],[L("Hjemmeboende børn","Children at home"),a.kids??"–"],[L("Beskæftigelse","Employment"),typeL(a)+" · "+(a.type==="emp"?a.employer:a.company+" (CVR "+a.cvr+")")],[L("Bil","Car"),a.fin.car&&a.consents.vehicle?LL(a.fin.car)+" · "+L("Motorregistret","Motor register"):(a.carAns||"–")]);
+  else if(n===2)(a.accounts.length?a.accounts:defaultAccounts()).filter(x=>x.on).forEach(x=>rows.push([LL(x.n)+" "+x.no,kr(x.bal)]));
+  else if(n===3)rows.push([L("Periode","Period"),fdate(365)+" – "+fdate(0)],[L("Antal posteringer","Transactions"),"1.284"],[L("Løn indgået (gns./md.)","Salary received (avg./mo.)"),kr(f.net)],[L("Faste overførsler","Standing transfers"),"14"]);
+  else if(n===4)rows.push([L("Arbejdsmarkedspension","Occupational pension"),kr(Math.round(f.pension*.8))],[L("Ratepension","Instalment pension"),kr(Math.round(f.pension*.2))],[L("Samlet","Total"),kr(f.pension)]);
+  else if(n===6)rows.push([L("Indkomstår","Income year"),String(TODAY.getFullYear()-1)],[L("Personlig indkomst","Personal income"),kr(f.gross)],[L("Skattepligtig indkomst","Taxable income"),kr(Math.round(f.gross*.9))],[L("Restskat / overskydende skat","Tax due / refund"),kr(Math.round(f.gross*.004))]);
+  else if(n===7)rows.push([L("Forskudsopgørelse","Preliminary tax assessment"),String(TODAY.getFullYear())],[L("Forventet personlig indkomst","Expected personal income"),kr(Math.round(f.gross*1.03))],[L("Arbejdsgiver","Employer"),a.type==="emp"?a.employer:a.company]);
+  else if(n===8){if(!f.debts.length)rows.push([L("Registreret gæld","Registered debt"),L("Ingen","None")]);f.debts.forEach(d=>rows.push([LL(d.t),kr(d.amt)]));rows.push([L("Tinglyste lån","Registered mortgages"),a.consents.tinglysning?L("Ingen ud over ovenstående","None beyond the above"):L("Ikke hentet","Not fetched")]);if(a.debtNote)rows.push([L("Kundens supplement","Customer's note"),a.debtNote])}
+  else if(n===9)rows.push([L("Metode","Method"),"MitID"],[L("Bekræftet","Confirmed"),fdate(a.mitidAt??0)]);
+  else if(n===10&&c.budget){const b=c.budget;c.apps.forEach((x,i)=>rows.push([L("Indtægt ","Income ")+x.first,kr(+b.inc[i]||0)]));[["housing",L("Bolig (nuværende)","Housing (current)")],["transport",L("Transport og bil","Transport and car")],["insurance",L("Forsikringer","Insurance")],["kids",L("Børn og institution","Children and childcare")],["subs",L("Abonnementer","Subscriptions")],["loans",L("Lån og afdrag","Loans and repayments")],["food",L("Mad og dagligvarer","Food and groceries")],["other",L("Øvrigt forbrug","Other spending")]].forEach(([k,l])=>rows.push([l,kr(+b[k]||0)]));rows.push([L("Rådighedsbeløb","Disposable income"),kr(econ(c).disp)])}
+  else if(n==="bbr")rows.push([L("Adresse","Address"),c.propAddr+", "+c.propZip+" "+c.propCity],[L("Boligareal","Living area"),(90+(c.propAddr.length*7)%90)+" m²"],[L("Opført","Built"),String(1930+(c.propAddr.length*13)%90)],[L("Anvendelse","Use"),LL(PROP[c.propType])]);
+  return {title,rows,src:st.src};
+}
+
+/* ===================== Kunde ===================== */
+function cusCtx(){const c=byId(CASES,S.cus.caseId);const ai=Math.min(S.cus.ai,c.apps.length-1);return {c,a:c.apps[ai],ai,main:ai===0}}
+function cusSteps(){const {a,main}=cusCtx();return [["welcome",L("Velkommen","Welcome")],main&&["purpose",L("Formål","Purpose")],["mitid",L("Identifikation","Identification")],["consent",L("Samtykker","Consents")],
+  a.consents.bank!==false&&["bank",L("Bankkonti","Bank accounts")],["info",L("Dine oplysninger","Your details")],["upload",L("Dokumenter","Documents")],main&&["budget",L("Budget","Budget")],["review",L("Gennemgang","Review")]].filter(Boolean)}
+function uploadSlots(c,a,main){
+  const sl=[];
+  if(a.type==="emp")sl.push({k:5,t:LL(DOC[5]),d:L("Upload dine seneste 3 lønsedler. Du finder dem typisk i e-Boks eller på din arbejdsplads' lønportal.","Upload your last 3 payslips. You usually find them in e-Boks or your employer's payroll portal."),min:1});
+  else sl.push({k:"11a",t:L("Årsregnskaber for de seneste 2 år","Annual accounts for the last 2 years"),d:L("Fra din revisor eller dit regnskabsprogram.","From your accountant or accounting software."),min:1},{k:"11b",t:L("Saldobalance for i år","Trial balance for this year"),d:L("Udskriv den fra dit regnskabsprogram. Den skal være for "+TODAY.getFullYear()+".","Export it from your accounting software. It must be for "+TODAY.getFullYear()+"."),min:1});
+  [[2,"bank"],[3,"bank"],[4,"pension"],[6,"skat"],[7,"skat"],[8,"skat"]].forEach(([n,by])=>{if(a.consents[by]===false||(by==="bank"&&a.consents.bank&&!a.bankLinked&&false))sl.push({k:n,t:LL(DOC[n]),d:L("Du har valgt ikke at give adgang, så du skal uploade dokumentet selv.","You chose not to give access, so you need to upload the document yourself."),min:1})});
+  if(main)["kob","gave","anden"].forEach(k=>{if(c.extras[k])sl.push({k,t:LL(EXTRA[k]),d:L("Din rådgiver har bedt om dette dokument.","Your advisor has asked for this document."),min:1,sag:true})});
+  return sl;
+}
+function slotDone(c,a,s){const u=s.sag?c.uploads[s.k]:a.uploads[s.k];return u&&u.length>=s.min}
+function slotRejected(c,a,s){if(s.sag)return c.rejected[s.k];if(s.k==="11a"||s.k==="11b")return a.rejected[11];return a.rejected[s.k]}
+function cusSide(step){
+  const {c}=cusCtx();const {a:adv,d,b}=advInfo(c.adv);
+  const tips={welcome:[L("Det tager typisk 10 minutter","It usually takes 10 minutes"),L("Du bestemmer selv, hvad du deler","You decide what you share"),L("Du kan stoppe og fortsætte senere","You can stop and continue later")],
+   purpose:[L("Du kan altid ændre dit valg senere","You can always change your choice later"),L("Din rådgiver kan se dit svar og hjælpe dig videre","Your advisor can see your answer and help you")],
+   mitid:[L("Vi kan hente din årsopgørelse fra SKAT","We can fetch your tax assessment from SKAT"),L("Vi kan hente oplysninger fra dine banker","We can fetch information from your banks"),L("Vi kan finde dine pensionsopsparinger","We can find your pension savings")],
+   consent:[L("Du bestemmer selv, hvilke oplysninger vi må hente","You decide what we may fetch"),L("Siger du nej, uploader du selv dokumentet","If you say no, you upload the document yourself"),L("Du kan altid trække dit samtykke tilbage","You can always withdraw your consent")],
+   bank:[L("Vi har kun læseadgang","We only have read access"),L("Du vælger selv, hvilke konti du deler","You choose which accounts to share"),L("Dine data deles kun med din rådgiver i denne sag","Your data is only shared with your advisor for this case")],
+   info:[L("Oplysninger fra CPR og SKAT er låst","Details from CPR and SKAT are locked"),L("Ret din e-mail eller dit telefonnummer, hvis det er forkert","Correct your email or phone if it is wrong")],
+   upload:[L("PDF, JPG og PNG kan bruges","PDF, JPG and PNG are accepted"),L("Du kan fortsætte og uploade senere","You can continue and upload later")],
+   budget:[L("Indtægter er hentet fra SKAT","Income is fetched from SKAT"),L("Et skøn er fint – din rådgiver gennemgår det med dig","An estimate is fine – your advisor will go through it with you")],
+   review:[L("Tjek at alt ser rigtigt ud","Check that everything looks right"),L("Mangler der noget, kontakter din rådgiver dig","If something is missing, your advisor will contact you")],done:[L("Din sag er sendt sikkert","Your case was sent securely"),L("Du kan altid logge ind og følge status","You can always sign in and follow the status")]}[step]||[];
+  return `<aside class="stack" style="gap:18px"><section class="card stack"><h3>${L("Din rådgiver","Your advisor")}</h3><div class="row" style="gap:14px;flex-wrap:nowrap"><span class="avatar lg">${initials(adv.name)}</span><div><b style="color:var(--ink)">${esc(adv.name)}</b><div class="small muted">${L("Privatrådgiver","Personal advisor")}<br>${esc(b.name)} – ${esc(d.name)}</div></div></div>
+   <div class="small stack" style="gap:6px"><span class="row" style="gap:8px">${I("phone")}<span style="user-select:all">${esc(adv.phone||"+45 70 10 20 30")}</span></span><span class="row" style="gap:8px;flex-wrap:nowrap">${I("mail")}<span style="user-select:all;overflow-wrap:anywhere">${esc(adv.mail||"raadgiver@"+b.name.toLowerCase().replace(/\s/g,"")+".example")}</span></span></div>
+   <hr style="border:0;border-top:1px solid var(--line);margin:4px 0;width:100%"><h3>${L("Din sag","Your case")}</h3><div class="row" style="gap:12px;flex-wrap:nowrap"><span class="ic-circle">${I(PURP[c.purpose].ic)}</span><div class="small"><b style="color:var(--ink)">${LL(PURP[c.purpose].a)}</b><div class="muted">${L("Oprettet","Created")} ${fdate(c.created)}</div><div class="muted">${c.id}</div></div></div></section>
+   ${tips.length?`<section class="note ok" style="display:grid;gap:10px"><div class="row" style="gap:8px">${I("shieldck")}<b style="color:var(--ink)">${L("Godt at vide","Good to know")}</b></div><ul class="checklist small">${tips.map(t=>`<li>${I("check")}<span>${t}</span></li>`).join("")}</ul></section>`:""}
+   <section class="card stack" style="gap:6px">${I("help")}<b style="color:var(--ink)">${L("Har du spørgsmål?","Any questions?")}</b><p class="small muted">${L("Kontakt din rådgiver, hvis du er i tvivl om noget.","Contact your advisor if you are unsure about anything.")}</p></section></aside>`;
+}
+function cusView(){
+  const {c,a,ai,main}=cusCtx();const steps=cusSteps();
+  if(S.cus.step>=steps.length)S.cus.step=steps.length-1;
+  const cur=a.submitted&&S.cus.step===steps.length-1&&!S.cus.editing?"done":steps[S.cus.step][0];
+  const {b}=advInfo(c.adv);
+  const sel=`<div class="demobar" style="border-top:0"><div class="demobar-in"><label class="small muted" for="cusSel">${L("Demo: vis kundelinket for","Demo: show the customer link for")}</label>
+   <select id="cusSel" style="width:auto;max-width:100%">${CASES.filter(x=>x.adv===ME&&x.stage!=="done").map(x=>x.apps.map((p,i)=>`<option value="${x.id}|${i}" ${x.id===c.id&&i===ai?"selected":""}>${esc(fullName(p))}${i?" ("+L("medansøger","co-applicant")+")":""} · ${esc(LL(CST[statusOf(x)]))}</option>`).join("")).join("")}</select>
+   <button class="btn sm" type="button" data-a="cusreset">${L("Start forfra","Start over")}</button><span class="sim">${L("simuleret","simulated")}</span></div></div>`;
+  const top=`<header class="cusbar"><div class="cusbar-in">${bankMark(b.name)}<span style="flex:1"></span><button class="btn sm" type="button" data-a="lang">${S.lang==="da"?"English":"Dansk"}</button><button class="btn link small" type="button" data-a="cuslogout">${I("logout")} ${L("Log ud","Sign out")}</button></div></header>`;
+  const foot=`<footer class="cusfoot"><span>${L("Privatlivspolitik","Privacy policy")}</span><span>${L("Vilkår","Terms")}</span><span>${L("Hjælp","Help")}</span><span class="pb">Powered by <b class="logo360">Lån<b>360</b></b></span></footer>`;
+  let body;
+  if(cur==="welcome")body=cusWelcome(c,a,main);
+  else body=`${stepper(steps.map(s=>s[1]).concat(cur==="done"?[]:[]),cur==="done"?steps.length:S.cus.step)}<div class="cus-grid" style="margin-top:8px"><div class="stack" style="gap:20px">${cusStep(cur,c,a,ai,main)}</div>${cusSide(cur)}</div>`;
+  return sel+top+`<div class="cuswrap">${body}</div>`+foot;
+}
+function cusWelcome(c,a,main){
+  const {a:adv}=advInfo(c.adv);
+  return `<div class="cus-grid"><div class="stack" style="gap:22px"><div class="hero">${main?"":`<span class="pill p-info" style="justify-self:start">${L("Du er inviteret som medansøger","You are invited as co-applicant")}</span>`}<h1 style="font-size:clamp(2rem,5vw,3.2rem)">${L("Lad os gøre din boligsag klar","Let's get your home case ready")}</h1>
+    <p class="lead">${L("Vi indsamler dine økonomiske oplysninger automatisk, så du slipper for selv at finde og sende en masse dokumenter.","We collect your financial information automatically, so you don't have to find and send lots of documents yourself.")}</p>
+    <div class="facts"><span>${I("clock")}${L("Tager typisk ca. 10 minutter","Usually takes about 10 minutes")}</span><span>${I("doc")}${L("De fleste oplysninger hentes automatisk","Most information is fetched automatically")}</span><span>${I("shieldck")}${L("Sikkert og fortroligt","Secure and confidential")}</span></div></div>
+   <section class="card stack"><h2>${L("Sådan foregår det","How it works")}</h2><div class="how">${[["user",L("Identificér dig","Identify yourself"),L("Log ind med MitID","Sign in with MitID")],["shield",L("Giv adgang","Give access"),L("Til SKAT, banker og pension","To SKAT, banks and pension")],["upload",L("Upload det sidste","Upload the rest"),a.type==="emp"?L("Fx dine lønsedler","E.g. your payslips"):L("Fx dine årsregnskaber","E.g. your annual accounts")],["eye",L("Kontrollér","Check"),L("Se dit overblik og bekræft","See your overview and confirm")],["send",L("Send til rådgiver","Send to advisor"),L("Direkte til ","Directly to ")+adv.first]].map(([ic,t,d],i)=>`<div><span class="ic-circle">${I(ic)}</span><b style="color:var(--ink);font-size:.92rem">${i+1}. ${t}</b><div class="tiny muted">${d}</div></div>`).join("")}</div></section>
+   <section class="note ok">${I("lock")}<div><b style="color:var(--ink)">${L("Dine oplysninger er sikre","Your information is secure")}</b><p class="small">${L("Dine data deles kun med din rådgiver i forbindelse med din boligsag, og du kan altid trække dit samtykke tilbage.","Your data is only shared with your advisor for your home case, and you can always withdraw your consent.")}</p></div></section>
+   <div class="stack" style="justify-items:center;gap:12px"><button class="btn pri lg" type="button" data-a="cusnext" style="min-width:min(100%,360px)">${a.submitted?L("Se min sag","View my case"):a.mitid?L("Fortsæt min boligsag","Continue my home case"):L("Start min boligsag","Start my home case")} ${I("ar")}</button>
+   <details style="max-width:560px"><summary>${L("Hvad får min rådgiver adgang til?","What does my advisor get access to?")}</summary><ul class="small" style="margin:8px 0 0;padding-left:18px">${req(a).map(n=>`<li>${esc(LL(DOC[n]))}</li>`).join("")}${main?`<li>${L("Budget","Budget")}</li>`:""}</ul><p class="tiny muted" style="margin-top:6px">${L("Kun det, du giver samtykke til, hentes automatisk. Resten uploader du selv.","Only what you consent to is fetched automatically. You upload the rest yourself.")}</p></details></div>
+  </div>${cusSide("welcome")}</div>`;
+}
+function cusNav(nextLabel,{disabled=false,act="cusnext"}={}){return `<div class="navrow"><button class="btn" type="button" data-a="cusprev">${I("al")} ${L("Tilbage","Back")}</button><button class="btn pri lg" type="button" data-a="${act}" ${disabled?"disabled":""}>${nextLabel||L("Fortsæt","Continue")} ${I("ar")}</button></div>`}
+function stepHead(eyebrow,title,lead){return `<div class="stack" style="gap:8px"><span class="eyebrow">${eyebrow}</span><h1>${title}</h1>${lead?`<p class="muted" style="font-size:1.05rem">${lead}</p>`:""}</div>`}
+function cusStep(cur,c,a,ai,main){
+  const steps=cusSteps();const n=S.cus.step+1,tot=steps.length;const eb=L(`Trin ${n} af ${tot}`,`Step ${n} of ${tot}`);
+  if(cur==="purpose")return stepHead(eb,L("Hvad skal vi hjælpe dig med?","What can we help you with?"),L("Fortæl os, hvad din boligsag handler om, så kan vi tilpasse processen til din situation.","Tell us what your home case is about so we can tailor the process to your situation."))+
+   `<div class="stack" style="gap:10px" role="radiogroup">${["buy","coop","cert","refi","other"].map(k=>`<button type="button" class="radio-card" role="radio" aria-checked="${c.purpose===k}" data-a="cuspurp" data-k="${k}"><span class="radio-dot"></span><span class="ic-circle">${I(PURP[k].ic)}</span><span><b style="color:var(--ink)">${LL(PURP[k].c)}</b><br><span class="small muted">${LL(PURP[k].cd)}</span></span></button>`).join("")}</div>`+cusNav();
+  if(cur==="mitid")return stepHead(eb,L("Identificér dig med MitID","Identify yourself with MitID"),L("For at kunne hente dine oplysninger skal vi bekræfte, at det er dig.","To fetch your information, we need to confirm that it is you."))+
+   `<section class="card stack" style="justify-items:center;text-align:center;gap:16px">${a.mitid?`<span class="big-check">${I("check")}</span><h2>${L("Du er identificeret","You are identified")}</h2><p class="muted">${esc(fullName(a))} · ${cpr(a)}</p>`:`<div style="font-size:2rem;font-weight:800;color:#0060E6;letter-spacing:-.02em">MitID</div><ul class="checklist small" style="text-align:left">${[L("Sikker identifikation","Secure identification"),L("Beskytter dine data","Protects your data"),L("Bruges af offentlige myndigheder og banker","Used by public authorities and banks")].map(t=>`<li>${I("check")}<span>${t}</span></li>`).join("")}</ul>
+    <button class="mitid-btn" type="button" data-a="mitid" ${S.cus.mitidBusy?"disabled":""}>${S.cus.mitidBusy?L("Venter på MitID…","Waiting for MitID…"):L("Fortsæt med MitID","Continue with MitID")}</button><p class="tiny muted">${L("I den rigtige løsning bliver du sendt til MitID og tilbage hertil.","In the real solution you are sent to MitID and back here.")} <span class="sim">${L("simuleret","simulated")}</span></p>`}</section>
+   <section class="card stack"><h3>${L("Hvad sker der bagefter?","What happens next?")}</h3><ol class="timeline">${[[L("Du giver samtykke til, at vi må hente dine oplysninger","You consent to us fetching your information"),L("Fx fra SKAT, banker og pension.","E.g. from SKAT, banks and pension.")],[L("Vi indsamler dine oplysninger automatisk","We collect your information automatically"),L("Det tager kun få minutter.","It only takes a few minutes.")],[L("Du ser og bekræfter oplysningerne","You see and confirm the information"),L("Og tilføjer det, vi ikke kan hente automatisk.","And add what we cannot fetch automatically.")]].map((x,i)=>`<li><span class="tl-dot">${i+1}</span><div class="small"><b>${x[0]}</b><div class="muted">${x[1]}</div></div></li>`).join("")}</ol></section>`+cusNav(null,{disabled:!a.mitid});
+  if(cur==="consent"){const items=[["skat","doc",L("SKAT (eSkatData)","SKAT (eSkatData)"),L("Vi henter dine skatteoplysninger, indkomst, arbejdsgiver, årsopgørelse, forskudsopgørelse og registreret gæld.","We fetch your tax information, income, employer, tax assessment, preliminary assessment and registered debt."),true],
+     ["bank","bank",L("Dine banker","Your banks"),L("Vi henter konti, saldo og transaktioner for de seneste 12 måneder.","We fetch accounts, balances and transactions for the last 12 months."),true],
+     ["pension","coins","PensionsInfo",L("Vi henter dine pensionsordninger, så din pension kan indgå i sagen.","We fetch your pension schemes so your pension can be included."),true],
+     ["vehicle","car",L("Køretøjsdata","Vehicle data"),L("Vi henter oplysninger om dine køretøjer fra Motorregistret, så vi kan tage højde for billån og leasing.","We fetch information about your vehicles from the Motor Register to account for car loans and leasing."),false],
+     ["tinglysning","home",L("Tinglysning","Land Registry"),L("Vi henter oplysninger om ejendomme, du ejer, og lån tinglyst på dem.","We fetch information about properties you own and loans registered on them."),false]];
+    return stepHead(eb,L("Giv os tilladelse til at hente dine oplysninger","Give us permission to fetch your information"),L("Du vælger selv, hvad du giver tilladelse til. Siger du nej til en anbefalet kilde, skal du selv uploade dokumenterne i et senere trin.","You choose what to allow. If you decline a recommended source, you will upload the documents yourself in a later step."))+
+    `<div class="stack" style="gap:12px">${items.map(([k,ic,t,d,rec])=>{const on=a.consents[k]??rec;return `<section class="card consent"><span class="ic-circle">${I(ic)}</span><div><div class="row" style="gap:8px"><b style="color:var(--ink)">${t}</b><span class="pill ${rec?"p-ok":"p-grey"}" style="font-size:.72rem">${rec?L("Anbefalet","Recommended"):L("Valgfri","Optional")}</span></div><p class="small muted" style="margin-top:4px">${d}</p></div>
+      <div class="toggle-wrap row" style="gap:8px;flex-wrap:nowrap"><button type="button" class="toggle" role="switch" aria-checked="${on}" data-a="consent" data-k="${k}" aria-label="${t}"></button><span class="tiny muted">${on?L("Giver tilladelse","Allowed"):L("Giver ikke tilladelse","Not allowed")}</span></div></section>`}).join("")}</div>`+cusNav(L("Giv samtykke og fortsæt","Consent and continue"),{act:"consentsave"});}
+  if(cur==="bank"){
+    if(!a.banks.length||S.cus.bankPick==="add"){return stepHead(eb,L("Forbind dine bankkonti","Connect your bank accounts"),L("Vi henter dine konti, saldo og transaktioner, så vi kan se din økonomi. Du vælger selv, hvilke konti du deler.","We fetch your accounts, balances and transactions to see your finances. You choose which accounts to share."))+
+     `<section class="note">${I("bank")}<div><b style="color:var(--ink)">${L("Sikker og nem forbindelse","Secure and simple connection")}</b><p class="small">${L("Vi bruger en godkendt open banking-løsning, hvor du logger ind i din egen bank. Vi får kun læseadgang.","We use an approved open banking solution where you sign in to your own bank. We only get read access.")}</p></div></section>
+     <section class="card stack"><h3>${L("Vælg din bank","Choose your bank")}</h3><div class="bankgrid">${BANKLIST.concat([L("Anden bank","Other bank")]).map(bk=>`<button type="button" class="banktile" data-a="bankpick" data-b="${esc(bk)}" ${S.cus.connecting?"disabled":""} aria-pressed="${S.cus.connecting===bk}">${S.cus.connecting===bk?L("Forbinder…","Connecting…"):esc(bk)}</button>`).join("")}</div><p class="tiny muted">${L("Bankerne vises som navne i demoen. Selve forbindelsen er simuleret.","Banks are shown as names in the demo. The connection itself is simulated.")}</p></section>`+(a.banks.length?`<div><button class="btn" type="button" data-a="bankcancel">${L("Annullér","Cancel")}</button></div>`:cusNav(null,{disabled:true}))}
+    const sel=a.accounts.filter(x=>x.on).length;
+    return stepHead(eb,L("Vi har hentet dine bankkonti","We have fetched your bank accounts"),L("Vælg de konti, du vil dele med din rådgiver.","Choose the accounts you want to share with your advisor."))+
+     `<section class="card stack"><div class="row between"><div class="row" style="gap:10px">${I("bank")}<b style="color:var(--ink)">${a.banks.map(esc).join(", ")}</b><span class="pill p-ok">${a.accounts.length} ${L("konti fundet","accounts found")}</span></div><button class="btn link small" type="button" data-a="bankadd">${I("plus")} ${L("Tilføj endnu en bank","Add another bank")}</button></div>
+      ${a.accounts.map((x,i)=>`<label class="acct"><input type="checkbox" id="acc${i}" data-a="acct" data-i="${i}" ${x.on?"checked":""} style="width:20px;height:20px;accent-color:var(--accent)"><span class="ic-circle" style="width:36px;height:36px">${I(i===1?"coins":"wallet")}</span><span><b style="color:var(--ink)">${esc(LL(x.n))}</b><br><span class="small muted">${x.no}</span></span><b class="num" style="color:var(--ink)">${kr(x.bal)}</b></label>`).join("")}
+      <div class="note">${I("info")}<p class="small">${L("Du kan altid tilføje eller fjerne konti senere.","You can always add or remove accounts later.")}</p></div></section>
+     <section class="card stack"><h3>${L("Eksempel på de data, vi henter","Example of the data we fetch")}</h3><p class="small muted">${L("Vi henter transaktioner for de seneste 12 måneder.","We fetch transactions for the last 12 months.")}</p><div class="tbl-wrap"><table><tbody>
+      ${[[3,L("Løn","Salary"),a.fin.net],[5,L("Husleje","Rent"),-8200],[7,"Netto",-642.35],[8,"OK Benzin",-493.21],[10,L("Forsikring","Insurance"),-1105]].map(([d,t,v])=>`<tr><td class="small muted">${fdate(d)}</td><td>${esc(t)}</td><td class="num" style="text-align:right;font-weight:700;color:${v>0?"var(--ok)":"var(--ink)"}">${v>0?"+ ":""}${kr(v)}</td></tr>`).join("")}</tbody></table></div></section>`+cusNav(null,{disabled:!sel,act:"banksave"});
+  }
+  if(cur==="info")return cusInfo(eb,c,a,main);
+  if(cur==="upload"){const sl=uploadSlots(c,a,main);
+    return stepHead(eb,L("Upload dine dokumenter","Upload your documents"),L("Det her kan vi ikke hente automatisk. Upload det, du har ved hånden – resten kan du sende senere.","We cannot fetch these automatically. Upload what you have to hand – you can send the rest later."))+
+     `<div class="stack" style="gap:12px">${sl.map(s=>{const done=slotDone(c,a,s);const rej=slotRejected(c,a,s);const files=(s.sag?c.uploads[s.k]:a.uploads[s.k])||[];
+      return `<section class="upl ${done&&!rej?"ok":""}"><div class="row between"><div><b style="color:var(--ink)">${esc(s.t)}</b><p class="small muted">${esc(s.d)}</p></div>${rej?pill("rejected"):done?pill("upload"):pill("missing")}</div>
+       ${rej?`<div class="note warn">${I("info")}<p class="small"><b>${L("Din rådgiver har afvist dokumentet:","Your advisor rejected the document:")}</b> ${esc(rej)}</p></div>`:""}
+       ${files.length?`<div class="files">${files.map(f=>`<span class="file">${esc(f.n)}</span>`).join("")}</div>`:""}
+       <div class="row"><input type="file" id="up-${s.k}" data-up="${s.k}" ${s.sag?'data-sag="1"':""} multiple accept=".pdf,.jpg,.jpeg,.png" aria-label="${esc(s.t)}"><button class="btn link small" type="button" data-a="samplefile" data-k="${s.k}" ${s.sag?'data-sag="1"':""}>${L("Brug eksempelfiler (demo)","Use sample files (demo)")}</button></div></section>`}).join("")}</div>`+cusNav();}
+  if(cur==="budget")return cusBudget(eb,c,a);
+  if(cur==="review")return cusReview(eb,c,a,ai,main);
+  if(cur==="done")return cusDone(c,a,main);
+  return "";
+}
+function cusInfo(eb,c,a,main){
+  const lockF=(l,v)=>`<label class="field"><span>${l}</span><span class="row" style="flex-wrap:nowrap;gap:0"><input type="text" value="${esc(v)}" readonly style="border-radius:9px"><span style="margin-left:-32px;color:var(--muted)">${I("lock")}</span></span></label>`;
+  const src=t=>`<span class="pill p-info" style="font-size:.72rem">${t}</span>`;
+  return stepHead(eb,L("Vi har hentet dine oplysninger","We have fetched your details"),L("Kontrollér venligst, at de er korrekte, og tilføj det, der mangler.","Please check that they are correct and add what is missing."))+
+  `<section class="card stack"><div class="row between"><h2>${L("Personlige oplysninger","Personal details")}</h2>${src(L("Hentet fra CPR via MitID","From CPR via MitID"))}</div>
+   <div class="grid2">${lockF(L("Navn","Name"),fullName(a))}${lockF(L("CPR-nummer","CPR number"),cpr(a))}</div>${lockF(L("Adresse","Address"),a.addr+", "+a.zip+" "+a.city)}
+   <div class="grid2"><label class="field"><span>${L("Telefonnummer","Phone number")}</span><input type="tel" id="ci-phone" value="${esc(a.phone)}"></label><label class="field"><span>${L("E-mail","Email")}</span><input type="email" id="ci-email" value="${esc(a.email)}"></label></div></section>
+  <section class="card stack"><div class="row between"><h2>${L("Civilstand og husstand","Marital status and household")}</h2>${src(L("Delvist hentet fra CPR","Partly from CPR"))}</div>
+   <div class="field"><span>${L("Civilstand","Marital status")}</span><div class="opts">${CIVIL.map((x,i)=>`<button type="button" class="opt-btn" data-a="civil" data-v="${i}" aria-pressed="${a.civil===i}">${LL(x)}</button>`).join("")}</div></div>
+   <div class="field"><span>${L("Antal hjemmeboende børn","Children living at home")}</span><div class="opts">${[0,1,2,3,"4+"].map((x,i)=>`<button type="button" class="opt-btn" data-a="kids" data-v="${i}" aria-pressed="${a.kids===i}">${x}</button>`).join("")}</div></div></section>
+  <section class="card stack"><div class="row between"><h2>${L("Beskæftigelse og indkomst","Employment and income")}</h2>${a.consents.skat?src(L("Hentet fra SKAT","From SKAT")):""}</div>
+   ${a.consents.skat?`<dl class="kv"><dt>${L("Beskæftigelse","Employment")}</dt><dd>${typeL(a)}</dd><dt>${a.type==="emp"?L("Arbejdsgiver","Employer"):L("Virksomhed","Company")}</dt><dd>${esc(a.type==="emp"?a.employer:a.company+" (CVR "+a.cvr+")")}</dd><dt>${L("Personlig indkomst sidste år","Personal income last year")}</dt><dd class="num">${kr(a.fin.gross)}</dd></dl>`
+   :`<p class="small muted">${L("Du har ikke givet adgang til SKAT. Udfyld din arbejdsgiver, og upload årsopgørelsen i næste trin.","You have not given access to SKAT. Enter your employer and upload your tax assessment in the next step.")}</p><label class="field"><span>${a.type==="emp"?L("Arbejdsgiver","Employer"):L("Virksomhed","Company")}</span><input type="text" id="ci-emp" value="${esc(a.type==="emp"?a.employer:a.company)}"></label>`}</section>
+  <section class="card stack"><div class="row between"><h2>${L("Bil","Car")}</h2>${a.consents.vehicle?src(L("Hentet fra Motorregistret","From the Motor Register")):""}</div>
+   ${a.consents.vehicle?`<p>${a.fin.car?esc(LL(a.fin.car)):L("Ingen registrerede køretøjer","No registered vehicles")}</p>`:`<div class="opts">${[L("Ingen bil","No car"),L("Ejet bil","Owned car"),L("Leaset bil","Leased car")].map((x,i)=>`<button type="button" class="opt-btn" data-a="carans" data-v="${esc(x)}" aria-pressed="${a.carAns===x}">${x}</button>`).join("")}</div>`}</section>
+  <section class="card stack"><div class="row between"><h2>${L("Gæld","Debt")}</h2>${a.consents.skat?src(a.consents.tinglysning?L("Hentet fra SKAT og Tinglysning","From SKAT and the Land Registry"):L("Hentet fra SKAT","From SKAT")):""}</div>
+   ${a.consents.skat?(a.fin.debts.length?`<dl class="kv">${a.fin.debts.map(d=>`<dt>${esc(LL(d.t))}</dt><dd class="num">${kr(d.amt)}</dd>`).join("")}</dl>`:`<p class="muted">${L("Ingen registreret gæld","No registered debt")}</p>`):""}
+   <label class="field"><span>${L("Har du gæld, som ikke står her? Fx kreditkort, afbetaling eller private lån","Do you have debt not listed here? E.g. credit cards, instalments or private loans")}</span><textarea id="ci-debt" style="min-height:70px">${esc(a.debtNote)}</textarea></label></section>`+cusNav(null,{act:"infosave"});
+}
+const BUD=[["housing",["Nuværende boligudgift","Current housing cost"]],["transport",["Transport og bil","Transport and car"]],["insurance",["Forsikringer","Insurance"]],["kids",["Børn og institution","Children and childcare"]],["subs",["Abonnementer og medier","Subscriptions and media"]],["loans",["Lån og afdrag","Loans and repayments"]],["food",["Mad og dagligvarer","Food and groceries"]],["other",["Øvrigt forbrug (tøj, fritid m.m.)","Other spending (clothes, leisure etc.)"]]];
+function cusBudget(eb,c,a){
+  if(!S.cus.bud)S.cus.bud=c.budget?JSON.parse(JSON.stringify(c.budget)):mkBudget(c);
+  const b=S.cus.bud;c.apps.forEach((x,i)=>{if(b.inc[i]==null)b.inc[i]=x.fin.net});
+  const inc=b.inc.reduce((s,x)=>s+(+x||0),0),exp=BUD.reduce((s,[k])=>s+(+b[k]||0),0);
+  return stepHead(eb,L("Dit budget","Your budget"),L("Et realistisk skøn er nok. Vi har udfyldt det, vi kunne, ud fra dine data.","A realistic estimate is enough. We have filled in what we could from your data."))+
+  `<section class="card stack"><h2>${L("Indtægter efter skat pr. måned","Income after tax per month")}</h2><div class="grid2">${c.apps.map((x,i)=>`<label class="field"><span>${esc(x.first)} ${x.consents.skat&&x.mitid?`<span class="pill p-info" style="font-size:.7rem">${L("Fra SKAT","From SKAT")}</span>`:""}</span><input type="number" id="bud-inc${i}" data-bud="inc.${i}" value="${esc(b.inc[i])}"></label>`).join("")}</div></section>
+  <section class="card stack"><h2>${L("Udgifter pr. måned","Expenses per month")}</h2><div class="grid2">${BUD.map(([k,l])=>`<label class="field"><span>${LL(l)}</span><input type="number" id="bud-${k}" data-bud="${k}" value="${esc(b[k])}"></label>`).join("")}</div></section>
+  <section class="card row between" style="background:var(--accent-soft)"><div><div class="eyebrow">${L("Rådighedsbeløb pr. måned","Disposable income per month")}</div><div id="budDisp" class="num" style="font-size:1.8rem;font-weight:800;color:${inc-exp<0?"var(--bad)":"var(--ink)"}">${kr(inc-exp)}</div></div><p class="small muted" style="max-width:40ch">${L("Det, der er tilbage, når de faste og variable udgifter er betalt – før ydelsen på det nye lån.","What is left after fixed and variable costs – before payments on the new loan.")}</p></section>`+cusNav(null,{act:"budsave"});
+}
+function reviewCats(c,a,main){
+  const st=n=>docState(c,a,n).s;const ok=(...ns)=>ns.every(n=>RECEIVED(st(n)));
+  const steps=cusSteps().map(s=>s[0]);const go=k=>steps.indexOf(k);
+  const cats=[["user",L("Personlige oplysninger","Personal details"),fullName(a)+", "+cpr(a)+", "+a.addr,ok(1,9),go("info")],
+   ["wallet",L("Indkomst og beskæftigelse","Income and employment"),(a.type==="emp"?L("Lønsedler, ","Payslips, "):L("Årsregnskaber, saldobalance, ","Annual accounts, trial balance, "))+L("årsopgørelse og skatteoplysninger","tax assessment and tax information"),ok(6,7,a.type==="emp"?5:11),go("upload")],
+   ["bank",L("Bankkonti","Bank accounts"),a.bankLinked?a.accounts.filter(x=>x.on).length+L(" konti fra "," accounts from ")+a.banks.join(", "):L("Kontoudtog uploadet af dig","Statements uploaded by you"),ok(2,3),a.consents.bank!==false?go("bank"):go("upload")],
+   ["coins",L("Pension","Pension"),a.consents.pension?L("Hentet fra PensionsInfo","Fetched from PensionsInfo"):L("Upload pensionsrapport","Upload pension report"),ok(4),go(a.consents.pension?"consent":"upload")],
+   ["home",L("Ejendomme og gæld","Property and debt"),a.fin.debts.length&&a.consents.skat?a.fin.debts.map(d=>LL(d.t)).join(", "):L("Ingen registreret gæld","No registered debt"),ok(8),go("info")],
+   ["car",L("Køretøjer","Vehicles"),a.consents.vehicle?(a.fin.car?LL(a.fin.car):L("Ingen","None")):(a.carAns||L("Ikke oplyst","Not stated")),a.consents.vehicle||!!a.carAns,go("info")]];
+  if(main){cats.push(["chart",L("Budget","Budget"),c.budget?L("Rådighedsbeløb ","Disposable income ")+kr(econ(c).disp):L("Ikke udfyldt","Not filled in"),!!c.budget,go("budget")]);
+    ["kob","gave","anden"].forEach(k=>{if(c.extras[k])cats.push(["doc",LL(EXTRA[k]),c.uploads[k]?c.uploads[k].map(f=>f.n).join(", "):L("Ikke uploadet","Not uploaded"),!!(c.uploads[k]&&!c.rejected[k]),go("upload")])})}
+  return cats;
+}
+function cusReview(eb,c,a,ai,main){
+  const cats=reviewCats(c,a,main);const miss=cats.filter(x=>!x[3]).length;
+  return stepHead(eb,miss?L("Du er næsten færdig!","You are almost done!"):L("Gennemgå og send din sag","Review and send your case"),L("Gennemgå oplysningerne, og bekræft at alt ser korrekt ud, før vi sender det til din rådgiver.","Review the information and confirm that everything looks right before we send it to your advisor."))+
+  `<section class="card"><div class="row" style="gap:14px;margin-bottom:8px;flex-wrap:nowrap"><span class="ic-circle ${miss?"":"ok"}">${I(miss?"doc":"check")}</span><div><h2>${L("Opsummering af dine oplysninger","Summary of your information")}</h2><p class="small muted">${miss?L(`${miss} punkt${miss>1?"er":""} mangler stadig. Du kan sende alligevel, så kontakter din rådgiver dig.`,`${miss} item${miss>1?"s are":" is"} still missing. You can send anyway and your advisor will contact you.`):L("Alt er klar til at blive sendt.","Everything is ready to be sent.")}</p></div></div>
+   ${cats.map(([ic,t,d,ok,stepIdx])=>`<div class="revrow"><span class="ic-circle" style="width:38px;height:38px">${I(ic)}</span><div style="min-width:0"><b style="color:var(--ink)">${esc(t)}</b><div class="small muted" style="overflow-wrap:anywhere">${esc(d)}</div></div><div class="row" style="gap:8px;flex-wrap:nowrap">${ok?`<span class="pill p-ok">${L("Klar","Ready")}</span>`:`<span class="pill p-warn">${L("Mangler","Missing")}</span><button class="btn sm" type="button" data-a="cusgo" data-s="${stepIdx}">${L("Ret","Fix")}</button>`}</div></div>`).join("")}</section>
+  <label class="check"><input type="checkbox" id="cus-confirm" data-a="cusconfirm" ${S.cus.confirm?"checked":""}><span>${L("Jeg bekræfter, at oplysningerne er korrekte, og at de må deles med min rådgiver i forbindelse med min boligsag.","I confirm that the information is correct and may be shared with my advisor for my home case.")}</span></label>
+  ${S.cus.err?`<p class="err">${esc(S.cus.err)}</p>`:""}`+cusNav(L("Send til min rådgiver","Send to my advisor"),{act:"cussubmit"});
+}
+function cusDone(c,a,main){
+  const {a:adv}=advInfo(c.adv);const cats=reviewCats(c,a,main).filter(x=>!x[3]);
+  return `<div class="stack" style="gap:18px"><span class="big-check">${I("check")}</span><h1>${cats.length?L("Din sag er sendt!","Your case has been sent!"):L("Alt er på plads!","Everything is in place!")}</h1>
+   <p class="muted" style="font-size:1.05rem">${L("Tak for din tilladelse. Vi har sendt dine oplysninger til ","Thank you for your consent. We have sent your information to ")}${esc(adv.name)}. ${L("Din rådgiver gennemgår sagen og vender tilbage, hvis der er behov for flere oplysninger.","Your advisor will review the case and get back to you if more information is needed.")}</p></div>
+  <section class="card"><dl class="kv"><dt>${L("Sagsnummer","Case number")}</dt><dd>${c.id}</dd><dt>${L("Sendt","Sent")}</dt><dd>${fdate(a.submittedAt??0)}</dd><dt>${L("Sagsstatus","Case status")}</dt><dd>${L("Modtaget af din rådgiver","Received by your advisor")}</dd><dt>${L("Vi kontakter dig","We will contact you")}</dt><dd>${L("Senest 3 hverdage","Within 3 working days")}</dd></dl></section>
+  ${cats.length?`<section class="note warn">${I("info")}<div class="stack" style="gap:8px"><b style="color:var(--ink)">${L("Der mangler stadig:","Still missing:")}</b><ul class="small" style="margin:0;padding-left:18px">${cats.map(x=>`<li>${esc(x[1])}</li>`).join("")}</ul><div><button class="btn sm" type="button" data-a="cusfix">${I("upload")} ${L("Tilføj det manglende","Add what is missing")}</button></div></div></section>`:""}
+  ${!main?"":c.apps.length>1&&!c.apps[1].submitted?`<section class="note">${I("users")}<p class="small">${esc(fullName(c.apps[1]))} ${L("mangler stadig at indsende sin del. Vedkommende har fået sit eget link.","still needs to submit their part. They have received their own link.")}</p></section>`:""}
+  <section class="card stack"><h2>${L("Hvad sker der nu?","What happens now?")}</h2><ol class="timeline">${[[L("Din rådgiver gennemgår sagen","Your advisor reviews the case"),L("Vi kontakter dig, hvis vi har brug for mere.","We contact you if we need more.")],[L("Vi tager kontakt","We get in touch"),L("Du hører fra din rådgiver via telefon eller e-mail.","You will hear from your advisor by phone or email.")],[L("Sammen finder I den bedste løsning","Together you find the best solution"),L("Når alt er på plads, hjælper vi dig videre.","Once everything is in place, we help you move forward.")]].map((x,i)=>`<li><span class="tl-dot ${i===0?"cur":""}">${i+1}</span><div class="small"><b>${x[0]}</b><div class="muted">${x[1]}</div></div></li>`).join("")}</ol>
+   <div class="note">${I("mail")}<p class="small">${L("Du får en kvittering på e-mail til ","You will receive a receipt by email at ")}<b>${esc(a.email)}</b>.</p></div></section>`;
+}
+
+/* ===================== Systemejer ===================== */
+function ownView(){
+  const active=CASES.filter(c=>!["done"].includes(statusOf(c)));
+  const avgP=Math.round(active.reduce((s,c)=>s+progress(c).pct,0)/Math.max(active.length,1));
+  const withMiss=active.filter(c=>progress(c).missing>0&&c.stage==="open").length;
+  const PH=["invited","collecting","awaiting","ready","credit"];
+  const agg=cs=>{cs=cs.filter(c=>statusOf(c)!=="done");const ph={};PH.forEach(k=>ph[k]=0);cs.forEach(c=>ph[statusOf(c)]++);const open=cs.filter(c=>c.stage==="open");
+    return {n:cs.length,ph,avg:cs.length?Math.round(cs.reduce((s,c)=>s+progress(c).pct,0)/cs.length):0,oldest:open.length?Math.max(...open.map(c=>c.created)):null}};
+  const phBar=a=>`<div class="phases" title="${PH.map(k=>LL(CST[k])+" "+a.ph[k]).join(" · ")}">${PH.map(k=>a.ph[k]?`<i class="ph-${k}" style="width:${a.ph[k]/a.n*100}%"></i>`:"").join("")}</div>`;
+  const line=(cls,label,a,login)=>`<tr class="${cls}"><td>${label}</td><td class="num">${a.n}</td><td>${a.n?phBar(a):""}</td><td class="num">${a.n?a.avg+" %":"–"}</td><td class="num">${a.oldest!=null?a.oldest+L(" d"," d"):"–"}</td><td class="num">${login??""}</td></tr>`;
+  let rows="";BANKS.forEach(b=>{const bc=CASES.filter(c=>advInfo(c.adv).b.id===b.id);rows+=line("lvl-bank",esc(b.name),agg(bc));
+   DEPTS.filter(d=>d.bank===b.id).forEach(d=>{rows+=line("lvl-dept",esc(d.name),agg(CASES.filter(c=>advInfo(c.adv).d.id===d.id)));
+    ADVS.filter(a=>a.dept===d.id).forEach(a=>rows+=line("lvl-adv",esc(a.name),agg(CASES.filter(c=>c.adv===a.id)),a.login===0?L("i dag","today"):a.login+L(" d"," d")))})});
+  const flags=[];
+  CASES.filter(c=>c.stage==="open"&&statusOf(c)!=="ready"&&lastAct(c)>=7).forEach(c=>flags.push({sev:"p-warn",txt:L(`Sag ${c.id}: ingen aktivitet i ${lastAct(c)} dage`,`Case ${c.id}: no activity for ${lastAct(c)} days`),adv:c.adv}));
+  CASES.filter(c=>c.integErr).forEach(c=>flags.push({sev:"p-bad",txt:L(`Sag ${c.id}: integration fejlede (${c.integErr})`,`Case ${c.id}: integration failed (${c.integErr})`),adv:c.adv}));
+  ADVS.filter(a=>a.login>=7).forEach(a=>flags.push({sev:"p-info",txt:L(`${a.name} har ikke logget ind i ${a.login} dage`,`${a.name} has not signed in for ${a.login} days`),adv:a.id}));
+  return `<div class="cuswrap" style="max-width:1300px"><div><h1>${L("Driftsoverblik","Operations overview")}</h1><p class="muted">${L("Banker, afdelinger og rådgivere. Ingen persondata vises her – kun sagsnumre, status og metadata.","Banks, departments and advisors. No personal data is shown here – only case numbers, status and metadata.")}</p></div>
+  <div class="kpis">${[["bank",BANKS.length,L("Kunder (banker)","Customers (banks)")],["doc",active.length,L("Aktive sager","Active cases")],["chart",avgP+" %",L("Gns. fremdrift","Avg. progress")],["info",Math.round(withMiss/Math.max(active.length,1)*100)+" %",L("Sager med mangler","Cases with missing items")]].map(([ic,n,l])=>`<div class="card kpi" style="cursor:default"><span class="ic-circle">${I(ic)}</span><span><b class="num">${n}</b><span class="small muted">${l}</span></span></div>`).join("")}</div>
+  <section class="card stack"><div class="row between"><h2>${L("Bank → afdeling → rådgiver","Bank → department → advisor")}</h2><div class="legend">${PH.map(k=>`<span><i class="ph-${k}"></i>${LL(CST[k])}</span>`).join("")}</div></div>
+   <div class="tbl-wrap"><table><thead><tr><th></th><th>${L("Aktive sager","Active cases")}</th><th>${L("Faser","Phases")}</th><th>${L("Gns. fremdrift","Avg. progress")}</th><th>${L("Ældste åbne sag","Oldest open case")}</th><th>${L("Sidst logget ind","Last sign-in")}</th></tr></thead><tbody>${rows}</tbody></table></div></section>
+  <section class="card"><h2 style="margin-bottom:6px">${L("Supportflag","Support flags")} <span class="muted num">(${flags.length})</span></h2>${flags.map(f=>{const {a,d,b}=advInfo(f.adv);return `<div class="flag"><span class="pill ${f.sev}" aria-hidden="true"></span><div><div>${esc(f.txt)}</div><div class="small muted">${esc(b.name)} · ${esc(d.name)} · ${esc(a.name)}</div></div><button class="btn sm" type="button" data-a="support">${L("Kontakt rådgiver","Contact advisor")}</button></div>`}).join("")}</section></div>`;
+}
+
+/* ===================== Render ===================== */
+function render(){
+  document.documentElement.lang=S.lang;
+  document.getElementById("demobar").innerHTML=`<div class="demobar">${demobar()}</div>`;
+  let html="";
+  if(S.view==="adv"){let inner;
+    if(S.page==="home")inner=pageHome();else if(S.page==="cases")inner=pageCases();else if(S.page==="messages")inner=pageMessages();
+    else if(S.page==="new"){if(!S.wiz)S.wiz=newWiz();inner=pageNew()}else if(S.page==="invited")inner=pageInvited();else inner=pageCase();
+    html=advShell(inner)}
+  else if(S.view==="cus")html=cusView();else html=ownView();
+  document.getElementById("root").innerHTML=html;
+  const m=document.getElementById("modalRoot");
+  if(S.modal){m.innerHTML=`<div class="modal-bg" data-a="closemodal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><div class="row between"><h2 id="mt">${esc(S.modal.title)}</h2><button class="btn sm" type="button" data-a="closemodal" aria-label="${L("Luk","Close")}">${I("x")}</button></div>
+   <p class="small muted">${L("Kilde","Source")}: ${esc(S.modal.src)} <span class="sim">${L("fiktive data","fictitious data")}</span></p><dl class="kv">${S.modal.rows.map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("")}</dl></div></div>`}else m.innerHTML="";
+}
+function go(){render();window.scrollTo(0,0)}
+
+/* ===================== Hændelser ===================== */
+function setPath(obj,path,val){const k=path.split(".");let o=obj;for(let i=0;i<k.length-1;i++)o=o[k[i]];o[k[k.length-1]]=val}
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-a]");if(!el)return;
+  if(el.classList.contains("modal-bg")&&e.target!==el)return;
+  const a=el.dataset.a,d=el.dataset;
+  const C=()=>byId(CASES,S.caseId);
+  switch(a){
+   case "view":S.view=d.v;S.modal=null;go();break;
+   case "lang":S.lang=S.lang==="da"?"en":"da";render();break;
+   case "nav":S.page=d.p;S.rejecting=null;if(d.p==="new")S.wiz=newWiz();if(d.p==="messages")CASES.forEach(c=>(c.messages||[]).forEach(m=>m.unread=false));go();break;
+   case "open":S.caseId=d.id;S.page="case";S.tab="overview";S.rejecting=null;(byId(CASES,d.id).messages||[]).forEach(m=>m.unread=false);go();break;
+   case "listtab":S.listTab=d.t;if(S.page==="home"&&el.classList.contains("kpi"))S.page="cases";render();break;
+   case "task":S.tasksDone[d.id]=el.checked;render();break;
+   case "tab":S.tab=d.t;S.rejecting=null;render();break;
+   case "wtype":S.wiz.a[+d.i].type=d.t;render();break;
+   case "wco":S.wiz.co=!S.wiz.co;S.wiz.err=[];render();break;
+   case "wpurp":S.wiz.purpose=d.k;render();break;
+   case "wgo":S.wiz.step=+d.s;S.wiz.err=[];go();break;
+   case "wconfirm":S.wiz.confirm=el.checked;break;
+   case "wextra":S.wiz.extras[d.k]=el.checked;break;
+   case "wch":S.wiz[d.k]=el.checked;break;
+   case "wprev":S.wiz.step--;S.wiz.err=[];go();break;
+   case "wnext":if(wizValidate()){if(S.wiz.step===4)S.wiz.msg=S.wiz.msg??defaultMsg();S.wiz.step++;go()}else render();break;
+   case "wcreate":if(wizValidate()){wizCreate();toast(L("Sagen er oprettet, og invitationen er sendt","The case was created and the invitation sent"));go()}else render();break;
+   case "wdemo":{const w=S.wiz;const A=(f,l,cp,t,comp,cvr)=>Object.assign(blankApp(),{first:f,last:l,cpr:cp,email:f.toLowerCase()+"."+l.toLowerCase()+"@example.dk",phone:"+45 20 30 40 50",addr:"Algade 22",zip:"4000",city:"Roskilde",type:t,company:comp||"",cvr:cvr||""});
+     if(d.k==="emp"){w.a[0]=A("Maria","Holt","150390-1234","emp");w.co=false}
+     else if(d.k==="self"){w.a[0]=A("Kim","Lassen","020285-1234","self","Lassen VVS ApS","40112233");w.co=false}
+     else{w.a[0]=A("Peter","Skov","110981-1234","self","Skov Rådgivning ApS","39887766");w.a[1]=A("Julie","Skov","230884-1234","emp");w.co=true}
+     Object.assign(w,{purpose:"buy",price:"3200000",downpay:"320000",propType:1,propAddr:"Bakkevej 9",propZip:"4000",propCity:"Roskilde",takeover:"2027-01-01"});w.err=[];render();break}
+   case "copylink":{const c=byId(CASES,d.id);const link="https://laan360.example/k/"+c.id.toLowerCase()+"-"+d.i;const done=()=>toast(L("Kundelink kopieret","Customer link copied"));try{navigator.clipboard.writeText(link).then(done,done)}catch(_){done()}break}
+   case "remind":{const c=byId(CASES,d.id);hist(c,"Påmindelse sendt til kunden","Reminder sent to the customer");toast(L("Påmindelse sendt (simuleret)","Reminder sent (simulated)"));render();break}
+   case "cusopen":S.cus={...S.cus,caseId:d.id,ai:+d.i,step:0,bankPick:null,confirm:false,err:"",bud:null,editing:false};S.view="cus";go();break;
+   case "viewdoc":S.modal=docPreview(C(),d.k);render();break;
+   case "closemodal":S.modal=null;render();break;
+   case "reject":S.rejecting=d.k;render();setTimeout(()=>document.getElementById("rejReason")?.focus(),0);break;
+   case "cancelrej":S.rejecting=null;render();break;
+   case "dorej":{const c=C();const [ai,nr]=d.k.split("|");const n=isNaN(+nr)?nr:+nr;const reason=document.getElementById("rejReason").value.trim()||L("Dokumentet kan ikke bruges. Kontakt din rådgiver.","The document cannot be used. Contact your advisor.");
+     if(ai==="c"){c.rejected[n]=reason;if(n===10){c.budget=null}else delete c.uploads[n]}else{const ap=c.apps[+ai];ap.rejected[n]=reason;if(n===11){delete ap.uploads["11a"];delete ap.uploads["11b"]}else delete ap.uploads[n];ap.submitted=false}
+     hist(c,"Dokument afvist: "+(ai==="c"?(EXTRA[n]?EXTRA[n][0]:DOC[n][0]):DOC[n][0]),"Document rejected: "+(ai==="c"?(EXTRA[n]?EXTRA[n][1]:DOC[n][1]):DOC[n][1]));
+     S.rejecting=null;toast(L("Dokumentet er afvist, og kunden har fået besked","The document was rejected and the customer notified"));render();break}
+   case "request":{const c=C();const [ai,nr]=d.k.split("|");const n=isNaN(+nr)?nr:+nr;const nm=ai==="c"?(EXTRA[n]||DOC[n]):DOC[n];hist(c,"Anmodning sendt: "+nm[0],"Request sent: "+nm[1]);toast(L("Anmodning sendt til kunden (simuleret)","Request sent to the customer (simulated)"));render();break}
+   case "savesum":C().summary=document.getElementById("summary").value;hist(C(),"Kundeopsummering opdateret","Customer summary updated");toast(L("Opsummering gemt","Summary saved"));render();break;
+   case "tocredit":C().stage="credit";hist(C(),"Sendt til kreditvurdering","Sent to credit assessment");toast(L("Sagen er sendt til kreditvurdering","The case was sent to credit assessment"));render();break;
+   case "close":C().stage="done";hist(C(),"Sag afsluttet","Case closed");toast(L("Sagen er afsluttet","The case is closed"));render();break;
+   case "support":toast(L("Supportsag oprettet (simuleret)","Support ticket created (simulated)"));break;
+   /* kunde */
+   case "cusnext":{const {a:ap}=cusCtx();if(cusSteps()[S.cus.step][0]==="welcome"&&ap.submitted){S.cus.step=cusSteps().length-1;S.cus.editing=false}else S.cus.step++;go();break}
+   case "cusprev":if(S.cus.step>0)S.cus.step--;S.cus.err="";go();break;
+   case "cusgo":S.cus.step=+d.s;S.cus.editing=true;go();break;
+   case "cusfix":{const {c,a:ap,main}=cusCtx();ap.submitted=false;S.cus.editing=true;S.cus.step=cusSteps().findIndex(s=>s[0]==="upload");go();break}
+   case "cuslogout":S.cus.step=0;go();break;
+   case "cusreset":{const {c,a:ap,ai,main}=cusCtx();const fresh=mkA({...ap,fin:ap.fin,mitid:false,mitidAt:null,consents:{skat:null,bank:null,pension:null,vehicle:null,tinglysning:null},bankLinked:false,banks:[],accounts:[],uploads:{},rejected:{},infoDone:false,submitted:false,carAns:null,debtNote:""});
+     c.apps[ai]=fresh;if(main){c.budget=null;c.uploads={};c.rejected={}}S.cus.step=0;S.cus.bud=null;S.cus.confirm=false;toast(L("Kundens forløb er nulstillet","The customer's journey was reset"));go();break}
+   case "cuspurp":{const {c}=cusCtx();if(c.purpose!==d.k){c.purpose=d.k;hist(c,"Kunden har ændret formål","The customer changed the purpose")}render();break}
+   case "mitid":{const {c,a:ap}=cusCtx();S.cus.mitidBusy=true;render();setTimeout(()=>{ap.mitid=true;ap.mitidAt=0;S.cus.mitidBusy=false;hist(c,fullName(ap)+" loggede ind med MitID",fullName(ap)+" signed in with MitID");render()},900);break}
+   case "consent":{const {a:ap}=cusCtx();const def={skat:true,bank:true,pension:true,vehicle:false,tinglysning:false};const cur=ap.consents[d.k]??def[d.k];S.cus.pending=S.cus.pending||{};ap.consents[d.k]=!cur;render();break}
+   case "consentsave":{const {c,a:ap}=cusCtx();const def={skat:true,bank:true,pension:true,vehicle:false,tinglysning:false};Object.keys(def).forEach(k=>{if(ap.consents[k]==null)ap.consents[k]=def[k]});ap.fetchAt=0;
+     if(!ap.consents.bank){ap.bankLinked=false}hist(c,fullName(ap)+" gav samtykke ("+Object.keys(def).filter(k=>ap.consents[k]).length+" kilder)",fullName(ap)+" gave consent ("+Object.keys(def).filter(k=>ap.consents[k]).length+" sources)");S.cus.step++;go();break}
+   case "bankpick":{const {c,a:ap}=cusCtx();S.cus.connecting=d.b;render();setTimeout(()=>{if(!ap.banks.includes(d.b))ap.banks.push(d.b);if(!ap.accounts.length)ap.accounts=defaultAccounts();else ap.accounts.push({n:["Konto i "+d.b,"Account at "+d.b],no:"•••• "+(1000+Math.floor(Math.random()*8999)),bal:Math.round(5000+Math.random()*40000),on:true});
+     S.cus.connecting=false;S.cus.bankPick=null;render()},900);break}
+   case "bankadd":S.cus.bankPick="add";render();break;
+   case "bankcancel":S.cus.bankPick=null;render();break;
+   case "acct":{const {a:ap}=cusCtx();ap.accounts[+d.i].on=el.checked;render();break}
+   case "banksave":{const {c,a:ap}=cusCtx();ap.bankLinked=true;ap.fetchAt=0;hist(c,fullName(ap)+" forbandt sin bank",fullName(ap)+" connected their bank");S.cus.step++;go();break}
+   case "civil":{const {a:ap}=cusCtx();ap.civil=+d.v;render();break}
+   case "kids":{const {a:ap}=cusCtx();ap.kids=+d.v;render();break}
+   case "carans":{const {a:ap}=cusCtx();ap.carAns=d.v;render();break}
+   case "infosave":{const {c,a:ap}=cusCtx();ap.phone=document.getElementById("ci-phone").value;ap.email=document.getElementById("ci-email").value;ap.debtNote=document.getElementById("ci-debt").value;
+     const emp=document.getElementById("ci-emp");if(emp){if(ap.type==="emp")ap.employer=emp.value;else ap.company=emp.value}
+     ap.infoDone=true;ap.infoAt=0;if(ap.civil==null)ap.civil=0;if(ap.kids==null)ap.kids=0;S.cus.step++;go();break}
+   case "samplefile":{const {c,a:ap}=cusCtx();const files=(FILES[d.k]||["dokument.pdf"]).map(n=>({n,d:0}));if(d.sag){c.uploads[d.k]=files;delete c.rejected[d.k]}else{ap.uploads[d.k]=files;delete ap.rejected[["11a","11b"].includes(d.k)?11:d.k]}
+     hist(c,fullName(ap)+" uploadede dokumenter",fullName(ap)+" uploaded documents");render();break}
+   case "budsave":{const {c}=cusCtx();c.budget=JSON.parse(JSON.stringify(S.cus.bud));delete c.rejected[10];hist(c,"Budget udfyldt af kunden","Budget filled in by the customer");S.cus.step++;go();break}
+   case "cusconfirm":S.cus.confirm=el.checked;S.cus.err="";break;
+   case "cussubmit":{const {c,a:ap}=cusCtx();if(!S.cus.confirm){S.cus.err=L("Sæt kryds for at bekræfte oplysningerne.","Tick the box to confirm the information.");render();break}
+     ap.submitted=true;ap.submittedAt=0;S.cus.editing=false;S.cus.confirm=false;hist(c,fullName(ap)+" sendte sin "+(c.apps.length>1?"del af sagen":"sag"),fullName(ap)+" submitted "+(c.apps.length>1?"their part of the case":"their case"));
+     (c.messages=c.messages||[]).unshift({d:0,t:nowHM(),from:fullName(ap),da:"Har sendt mine oplysninger.",en:"I have sent my information.",unread:true});go();break}
+  }
+});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("tr[data-a]"))e.target.click();if(e.key==="Escape"&&S.modal){S.modal=null;render()}});
+document.addEventListener("input",e=>{
+  const t=e.target;
+  if(t.id==="q"){S.q=t.value;const pos=t.selectionStart;if(S.page!=="cases"&&S.page!=="home")S.page="cases";render();const q=document.getElementById("q");q.focus();q.setSelectionRange(pos,pos);return}
+  if(t.dataset.w&&!t.dataset.rerender){let v=t.value;setPath(S.wiz,t.dataset.w,v);if(t.dataset.w==="msg")return;
+    if(S.wiz.step===3&&["price","downpay"].includes(t.dataset.w)){const pos=t.selectionStart;render();const n=document.getElementById(t.id);if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}}}return}
+  if(t.dataset.bud){const k=t.dataset.bud;if(k.startsWith("inc."))S.cus.bud.inc[+k.slice(4)]=+t.value||0;else S.cus.bud[k]=+t.value||0;
+    const b=S.cus.bud;const inc=b.inc.reduce((s,x)=>s+(+x||0),0),exp=BUD.reduce((s,[k])=>s+(+b[k]||0),0);const el=document.getElementById("budDisp");el.textContent=kr(inc-exp);el.style.color=inc-exp<0?"var(--bad)":"var(--ink)";}
+});
+document.addEventListener("change",e=>{
+  const t=e.target;
+  if(t.dataset.w&&(t.tagName==="SELECT")){let v=t.value;if(t.dataset.w==="a.1.sameAddr")v=!!v;setPath(S.wiz,t.dataset.w,v);render();return}
+  if(t.id==="cusSel"){const [id,i]=t.value.split("|");S.cus={...S.cus,caseId:id,ai:+i,step:0,bud:null,confirm:false,err:"",editing:false,bankPick:null};go();return}
+  if(t.dataset.up&&t.files.length){const {c,a:ap}=cusCtx();const files=[...t.files].map(f=>({n:f.name,d:0}));const k=t.dataset.up;
+    if(t.dataset.sag){c.uploads[k]=files;delete c.rejected[k]}else{ap.uploads[isNaN(+k)?k:+k]=files;delete ap.rejected[["11a","11b"].includes(k)?11:+k]}hist(c,fullName(ap)+" uploadede dokumenter",fullName(ap)+" uploaded documents");render()}
+});
+render();
+</script>
